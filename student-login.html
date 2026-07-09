@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Login to Sarojit Pal Art platform to access your enrolled courses and continue learning.">
+  <title>Student Login — Sarojit Pal Art</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/login.css">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+  <div class="login-page" id="loginPage">
+    <!-- Background Floating Shapes -->
+    <div class="login-bg-shape login-bg-shape--1"></div>
+    <div class="login-bg-shape login-bg-shape--2"></div>
+    <div class="login-bg-shape login-bg-shape--3"></div>
+    <div class="login-bg-shape login-bg-shape--4"></div>
+
+    <!-- Login Card -->
+    <div class="login-card" id="loginCard">
+      <!-- Header -->
+      <div class="login-card__header">
+        <a href="index.html" class="login-card__logo">
+          <span class="login-card__logo-icon">🎨</span>
+          <span class="login-card__logo-text">Sarojit Pal Art</span>
+        </a>
+        <h1 class="login-card__title">Welcome Back</h1>
+        <p class="login-card__subtitle">Login to continue your learning journey</p>
+      </div>
+
+      <!-- Body -->
+      <div class="login-card__body">
+        <!-- Error Banner -->
+        <div class="login-error-banner" id="loginErrorBanner">
+          <svg class="login-error-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          <span class="login-error-banner__text" id="loginErrorText">Invalid credentials</span>
+        </div>
+
+        <!-- Success Banner -->
+        <div class="login-success-banner" id="loginSuccessBanner">
+          <svg class="login-success-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          <span class="login-success-banner__text" id="loginSuccessText">Login successful!</span>
+        </div>
+
+        <!-- Login Form -->
+        <form class="login-form" id="studentLoginForm">
+          <!-- Email -->
+          <div class="login-input-group" id="emailGroup">
+            <label class="login-input-group__label" for="loginEmail">Email Address</label>
+            <div class="login-input-group__wrapper">
+              <svg class="login-input-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input
+                type="email"
+                id="loginEmail"
+                class="login-input-group__input"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              >
+            </div>
+            <div class="login-input-group__error" id="emailError">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="emailErrorText">Please enter a valid email</span>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="login-input-group" id="passwordGroup">
+            <label class="login-input-group__label" for="loginPassword">Password</label>
+            <div class="login-input-group__wrapper">
+              <svg class="login-input-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input
+                type="password"
+                id="loginPassword"
+                class="login-input-group__input"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+              >
+              <button type="button" class="login-input-group__toggle" id="passwordToggle" aria-label="Show password">
+                <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg id="eyeOffIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+            <div class="login-input-group__error" id="passwordError">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="passwordErrorText">Password is required</span>
+            </div>
+          </div>
+
+          <!-- Options Row -->
+          <div class="login-form__options">
+            <label class="login-form__remember">
+              <input type="checkbox" id="rememberMe">
+              <span class="login-form__remember-text">Remember me</span>
+            </label>
+            <a href="student-forgot.html" class="login-form__forgot">Forgot Password?</a>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="login-btn" id="loginBtn">
+            <span class="login-btn__text">Login</span>
+            <div class="login-btn__spinner"></div>
+          </button>
+          
+          <!-- Optional Social Login Placeholder -->
+          <div style="text-align:center; margin-top:0.5rem;">
+             <span style="font-size:0.875rem; color:var(--text-tertiary);">Or continue with</span>
+             <button type="button" class="btn btn--outline" style="width:100%; margin-top:0.5rem; display:flex; justify-content:center; gap:0.5rem; border-color:var(--border-light); color:var(--text-secondary);">
+               <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/><path d="M1 1h22v22H1z" fill="none"/></svg>
+               Google
+             </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-card__footer">
+        <p class="login-card__footer-text">
+          Don't have an account? <a href="register.html" class="login-card__footer-link">Sign Up</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/student-auth.js"></script>
+  <script>
+    (function() {
+      // If already logged in, redirect to dashboard
+      if (isStudentAuthenticated()) {
+        window.location.href = 'student-dashboard.html';
+        return;
+      }
+
+      const form = document.getElementById('studentLoginForm');
+      const emailInput = document.getElementById('loginEmail');
+      const passwordInput = document.getElementById('loginPassword');
+      const loginBtn = document.getElementById('loginBtn');
+      const passwordToggle = document.getElementById('passwordToggle');
+      const eyeIcon = document.getElementById('eyeIcon');
+      const eyeOffIcon = document.getElementById('eyeOffIcon');
+      const errorBanner = document.getElementById('loginErrorBanner');
+      const errorText = document.getElementById('loginErrorText');
+      const successBanner = document.getElementById('loginSuccessBanner');
+      const successText = document.getElementById('loginSuccessText');
+
+      // Password Toggle
+      passwordToggle.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        eyeIcon.style.display = isPassword ? 'none' : 'block';
+        eyeOffIcon.style.display = isPassword ? 'block' : 'none';
+        passwordToggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+      });
+
+      // Real-time Validation
+      emailInput.addEventListener('blur', () => {
+        if (emailInput.value && !isValidEmail(emailInput.value)) {
+          showFieldError('emailGroup', 'emailError', 'Please enter a valid email address');
+        } else {
+          clearFieldError('emailGroup', 'emailError');
+        }
+      });
+
+      emailInput.addEventListener('input', () => {
+        clearFieldError('emailGroup', 'emailError');
+        hideBanners();
+      });
+
+      passwordInput.addEventListener('input', () => {
+        clearFieldError('passwordGroup', 'passwordError');
+        hideBanners();
+      });
+
+      // Form Submit
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        hideBanners();
+        clearFieldError('emailGroup', 'emailError');
+        clearFieldError('passwordGroup', 'passwordError');
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+
+        let hasError = false;
+
+        if (!email) {
+          showFieldError('emailGroup', 'emailError', 'Email is required');
+          hasError = true;
+        } else if (!isValidEmail(email)) {
+          showFieldError('emailGroup', 'emailError', 'Please enter a valid email address');
+          hasError = true;
+        }
+
+        if (!password) {
+          showFieldError('passwordGroup', 'passwordError', 'Password is required');
+          hasError = true;
+        }
+
+        if (hasError) return;
+
+        setLoading(true);
+
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const result = await loginStudent(email, password, rememberMe);
+
+        setLoading(false);
+
+        if (result.success) {
+          successText.textContent = result.message;
+          successBanner.classList.add('visible');
+
+          // Check if there was a redirect saved
+          const redirect = sessionStorage.getItem('spa_redirect_after_login') || result.redirect;
+          sessionStorage.removeItem('spa_redirect_after_login');
+
+          setTimeout(() => {
+            window.location.href = redirect;
+          }, 600);
+        } else {
+          errorText.textContent = result.message;
+          errorBanner.classList.add('visible');
+        }
+      });
+
+      // Helpers
+      function showFieldError(groupId, errorId, message) {
+        const group = document.getElementById(groupId);
+        const error = document.getElementById(errorId);
+        const textEl = error.querySelector('span');
+        if (textEl) textEl.textContent = message;
+        group.classList.add('login-input-group--error');
+        error.classList.add('visible');
+      }
+
+      function clearFieldError(groupId, errorId) {
+        document.getElementById(groupId).classList.remove('login-input-group--error');
+        document.getElementById(errorId).classList.remove('visible');
+      }
+
+      function hideBanners() {
+        errorBanner.classList.remove('visible');
+        successBanner.classList.remove('visible');
+      }
+
+      function setLoading(loading) {
+        loginBtn.disabled = loading;
+        loginBtn.classList.toggle('login-btn--loading', loading);
+      }
+
+      // Auto-fill email from "Remember Me"
+      const remembered = localStorage.getItem(STUDENT_AUTH_KEYS.REMEMBER);
+      if (remembered) {
+        const session = JSON.parse(localStorage.getItem(STUDENT_AUTH_KEYS.SESSION));
+        if (session && session.email) {
+          emailInput.value = session.email;
+          document.getElementById('rememberMe').checked = true;
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

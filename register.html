@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Register an account on Sarojit Pal Art to enroll in world-class painting and drawing classes.">
+  <title>Create Account — Sarojit Pal Art</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/login.css">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E">
+  <style>
+    /* Slight adjustments for register card to fit more fields */
+    .register-card { max-width: 480px; }
+    .register-card .login-card__header { padding-bottom: var(--space-4); }
+    .register-card .login-card__body { padding-top: var(--space-4); }
+  </style>
+</head>
+<body>
+
+  <div class="login-page">
+    <div class="login-bg-shape login-bg-shape--1"></div>
+    <div class="login-bg-shape login-bg-shape--2"></div>
+    <div class="login-bg-shape login-bg-shape--3"></div>
+
+    <div class="login-card register-card">
+      <div class="login-card__header">
+        <a href="index.html" class="login-card__logo">
+          <span class="login-card__logo-icon">🎨</span>
+          <span class="login-card__logo-text">Sarojit Pal Art</span>
+        </a>
+        <h1 class="login-card__title">Create Your Account</h1>
+        <p class="login-card__subtitle">Join us and start your learning journey today</p>
+      </div>
+
+      <div class="login-card__body">
+        <div class="login-error-banner" id="errorBanner">
+          <svg class="login-error-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <span class="login-error-banner__text" id="errorText">Error</span>
+        </div>
+
+        <div class="login-success-banner" id="successBanner">
+          <svg class="login-success-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+          <span class="login-success-banner__text" id="successText">Success!</span>
+        </div>
+
+        <form class="login-form" id="registerForm">
+          <!-- Full Name -->
+          <div class="login-input-group" id="nameGroup">
+            <label class="login-input-group__label" for="regName">Full Name</label>
+            <div class="login-input-group__wrapper">
+              <svg class="login-input-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" id="regName" class="login-input-group__input" placeholder="John Doe" required>
+            </div>
+            <div class="login-input-group__error" id="nameError">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="nameErrorText">Name is required</span>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="login-input-group" id="emailGroup">
+            <label class="login-input-group__label" for="regEmail">Email Address</label>
+            <div class="login-input-group__wrapper">
+              <svg class="login-input-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" id="regEmail" class="login-input-group__input" placeholder="you@example.com" required>
+            </div>
+            <div class="login-input-group__error" id="emailError">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="emailErrorText">Please enter a valid email</span>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="login-input-group" id="passwordGroup">
+            <label class="login-input-group__label" for="regPassword">Password</label>
+            <div class="login-input-group__wrapper">
+              <svg class="login-input-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="regPassword" class="login-input-group__input" placeholder="Minimum 6 characters" required>
+            </div>
+            <div class="login-input-group__error" id="passwordError">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="passwordErrorText">Password is required</span>
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="login-input-group" id="confirmGroup">
+            <label class="login-input-group__label" for="regConfirm">Confirm Password</label>
+            <div class="login-input-group__wrapper">
+              <svg class="login-input-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="regConfirm" class="login-input-group__input" placeholder="Confirm your password" required>
+            </div>
+            <div class="login-input-group__error" id="confirmError">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="confirmErrorText">Passwords do not match</span>
+            </div>
+          </div>
+
+          <button type="submit" class="login-btn" id="registerBtn">
+            <span class="login-btn__text">Sign Up</span>
+            <div class="login-btn__spinner"></div>
+          </button>
+        </form>
+      </div>
+
+      <div class="login-card__footer">
+        <p class="login-card__footer-text">
+          Already have an account? <a href="student-login.html" class="login-card__footer-link">Log In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/student-auth.js"></script>
+  <script>
+    (function() {
+      if (isStudentAuthenticated()) {
+        window.location.href = 'student-dashboard.html';
+        return;
+      }
+
+      const form = document.getElementById('registerForm');
+      const nameInput = document.getElementById('regName');
+      const emailInput = document.getElementById('regEmail');
+      const passInput = document.getElementById('regPassword');
+      const confInput = document.getElementById('regConfirm');
+      const regBtn = document.getElementById('registerBtn');
+
+      const errorBanner = document.getElementById('errorBanner');
+      const errorText = document.getElementById('errorText');
+      const successBanner = document.getElementById('successBanner');
+      const successText = document.getElementById('successText');
+
+      function hideBanners() {
+        errorBanner.classList.remove('visible');
+        successBanner.classList.remove('visible');
+      }
+
+      function showError(msg) {
+        errorText.textContent = msg;
+        errorBanner.classList.add('visible');
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideBanners();
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const pass = passInput.value;
+        const conf = confInput.value;
+
+        if (!isValidEmail(email)) {
+          showError('Please enter a valid email address.');
+          return;
+        }
+
+        if (pass.length < 6) {
+          showError('Password must be at least 6 characters long.');
+          return;
+        }
+
+        if (pass !== conf) {
+          showError('Passwords do not match.');
+          return;
+        }
+
+        regBtn.disabled = true;
+        regBtn.classList.add('login-btn--loading');
+
+        // Simulate network
+        await new Promise(r => setTimeout(r, 800));
+
+        const result = await registerStudent(name, email, pass);
+
+        regBtn.disabled = false;
+        regBtn.classList.remove('login-btn--loading');
+
+        if (result.success) {
+          successText.textContent = result.message;
+          successBanner.classList.add('visible');
+          form.reset();
+          
+          setTimeout(() => {
+            window.location.href = 'student-login.html';
+          }, 2000);
+        } else {
+          showError(result.message);
+        }
+      });
+
+      // Clear errors
+      const inputs = [nameInput, emailInput, passInput, confInput];
+      inputs.forEach(input => input.addEventListener('input', hideBanners));
+    })();
+  </script>
+</body>
+</html>

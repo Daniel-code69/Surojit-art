@@ -1,0 +1,155 @@
+/* ===================================================
+   DESIGN SYSTEM — Sarojit Pal Art Learning Platform
+   =================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* ── Primary Colors ── */
+  --primary-blue: #2563EB;
+  --primary-purple: #7C3AED;
+  --primary-indigo: #4F46E5;
+  --primary-violet: #9333EA;
+
+  /* ── Gradients ── */
+  --gradient-hero: linear-gradient(135deg, #2563EB 0%, #6D28D9 50%, #9333EA 100%);
+  --gradient-hero-dark: linear-gradient(135deg, #1E40AF 0%, #5B21B6 50%, #7C3AED 100%);
+  --gradient-card-hover: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(124, 58, 237, 0.05));
+  --gradient-button: linear-gradient(135deg, #2563EB, #7C3AED);
+  --gradient-button-hover: linear-gradient(135deg, #1D4ED8, #6D28D9);
+  --gradient-badge: linear-gradient(135deg, #F59E0B, #EF4444);
+  --gradient-sidebar: linear-gradient(180deg, #1E1B4B 0%, #312E81 100%);
+
+  /* ── Surface Colors (Light Mode) ── */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --bg-tertiary: #F1F5F9;
+  --bg-card: #FFFFFF;
+  --bg-input: #F8FAFC;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* ── Text Colors ── */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #FFFFFF;
+  --text-link: #2563EB;
+  --text-accent: #7C3AED;
+
+  /* ── Border Colors ── */
+  --border-light: #E2E8F0;
+  --border-medium: #CBD5E1;
+  --border-focus: #2563EB;
+
+  /* ── Status Colors ── */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+  --color-star: #F59E0B;
+  --color-heart: #EF4444;
+  --color-free: #10B981;
+
+  /* ── Category Colors ── */
+  --cat-painting: #2563EB;
+  --cat-acrylic: #7C3AED;
+  --cat-colour-pencil: #EC4899;
+  --cat-portrait: #F59E0B;
+  --cat-oil: #10B981;
+  --cat-realism: #EF4444;
+  --cat-charcoal: #6B7280;
+  --cat-watercolor: #06B6D4;
+  --cat-sketching: #8B5CF6;
+
+  /* ── Typography ── */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Outfit', 'Inter', sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+
+  --font-light: 300;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* ── Border Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 20px 40px -8px rgba(37, 99, 235, 0.15), 0 8px 16px -4px rgba(124, 58, 237, 0.1);
+  --shadow-input-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 350ms ease;
+  --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Z-Index ── */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+
+  /* ── Container ── */
+  --container-max: 1280px;
+  --container-padding: 1.5rem;
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] {
+  --bg-primary: #0F172A;
+  --bg-secondary: #1E293B;
+  --bg-tertiary: #334155;
+  --bg-card: #1E293B;
+  --bg-input: #334155;
+
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+
+  --border-light: #334155;
+  --border-medium: #475569;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 20px 40px -8px rgba(37, 99, 235, 0.25), 0 8px 16px -4px rgba(124, 58, 237, 0.2);
+}

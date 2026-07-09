@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Explore art courses by Sarojit Pal — Portrait, Acrylic, Oil, Charcoal, Colour Pencil, Watercolor painting classes. Learn from a professional artist and mentor.">
+  <meta name="keywords"
+    content="art courses, painting classes, portrait drawing, Sarojit Pal, acrylic painting, oil painting, charcoal drawing, colour pencil, realism art, online art classes">
+  <meta name="author" content="Sarojit Pal">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Explore Art Courses — Sarojit Pal Art">
+  <meta property="og:description"
+    content="Learn painting, portraiture, and drawing from professional artist Sarojit Pal. Beginner to advanced courses available.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sarojitpalart.com/courses.php">
+
+  <title>Explore Courses — Sarojit Pal Art | Painting & Drawing Classes</title>
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css?v=2">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/filters.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/reviews.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎨%3C/text%3E%3C/svg%3E">
+</head>
+
+<body>
+
+  <!-- ════════════════════════════════════════════
+       HEADER / NAV
+       ════════════════════════════════════════════ -->
+  <header class="site-header" id="siteHeader" style="
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-light);
+    padding: 0.75rem 0;
+    position: relative;
+    z-index: 10;
+  ">
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;">
+      <a href="https://sarojitpalart.com/index.php"
+        style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;">
+        <span style="font-size:1.5rem;">🎨</span>
+        <span
+          style="font-family:var(--font-display);font-weight:800;font-size:1.15rem;color:var(--text-primary);">Sarojit
+          Pal Art</span>
+      </a>
+      <nav style="display:flex;align-items:center;gap:1.5rem;" id="mainNav">
+        <a href="#" style="font-size:0.875rem;font-weight:600;color:var(--primary-blue);">Courses</a>
+        <a href="login.html" style="font-size:0.875rem;font-weight:500;color:var(--text-secondary);">Admin</a>
+        <div id="dynamicNavAuth" style="display:flex;align-items:center;gap:1rem;">
+          <a href="student-login.html" id="navLoginBtn" style="font-size:0.875rem;font-weight:600;color:var(--primary-blue);">Log In</a>
+          <a href="register.html" id="navRegisterBtn" style="font-size:0.75rem;font-weight:600;color:var(--text-inverse);background:var(--gradient-button);padding:6px 16px;border-radius:var(--radius-full);">Sign Up</a>
+          <a href="student-dashboard.html" id="navDashboardBtn" style="display:none;font-size:0.75rem;font-weight:600;color:var(--text-inverse);background:var(--gradient-button);padding:6px 16px;border-radius:var(--radius-full);">Dashboard</a>
+        </div>
+      </nav>
+      <!-- Mobile Menu Toggle -->
+      <button id="mobileMenuToggle"
+        style="display:none;background:none;border:1px solid var(--border-light);border-radius:var(--radius-md);width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);"
+        aria-label="Toggle menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ════════════════════════════════════════════
+         HERO SECTION
+         ════════════════════════════════════════════ -->
+    <section class="hero" id="heroSection">
+      <div class="hero__shape hero__shape--1"></div>
+      <div class="hero__shape hero__shape--2"></div>
+      <div class="hero__shape hero__shape--3"></div>
+      <div class="hero__content">
+        <h1 class="hero__title">Explore Our Courses</h1>
+        <p class="hero__subtitle">Create your imagination into a reality</p>
+        <form class="hero__search" id="heroSearchForm">
+          <input type="search" id="heroSearch" class="hero__search-input"
+            placeholder="Search for courses, skills, or techniques..." autocomplete="off">
+          <button type="submit" class="hero__search-btn" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════
+         FILTERS SECTION
+         ════════════════════════════════════════════ -->
+    <section class="filters" id="filtersSection">
+      <div class="container">
+        <div class="filters__inner">
+          <div class="filters__group">
+            <select class="filter-select__trigger" id="filterCategory" aria-label="Filter by category">
+              <option value="">All Categories</option>
+            </select>
+            <select class="filter-select__trigger" id="filterPrice" aria-label="Filter by price">
+              <option value="">All Prices</option>
+              <option value="free">Free</option>
+              <option value="paid">Paid</option>
+            </select>
+            <select class="filter-select__trigger" id="filterLevel" aria-label="Filter by level">
+              <option value="">All Levels</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+            <span class="filters__count" id="coursesCount">Showing <span>0</span> courses</span>
+          </div>
+          <div class="filters__right">
+            <select class="filter-select__trigger" id="filterSort" aria-label="Sort courses">
+              <option value="popularity">Popularity</option>
+              <option value="newest">Newest First</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+            </select>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════
+         COURSES GRID
+         ════════════════════════════════════════════ -->
+    <section class="courses-section" id="coursesSection">
+      <div class="container">
+        <div class="courses-grid" id="coursesGrid">
+          <!-- Cards rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════
+         REVIEWS SECTION
+         ════════════════════════════════════════════ -->
+    <section class="reviews-section" id="reviewsSection">
+      <div class="container">
+        <div class="reviews-section__header">
+          <h2 class="reviews-section__title">What Students Say</h2>
+          <p class="reviews-section__subtitle">Trusted by learners worldwide. See why our community loves this approach.
+          </p>
+        </div>
+        <div class="reviews-slider">
+          <button class="reviews-slider__nav reviews-slider__nav--prev" id="reviewPrev" aria-label="Previous review">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <div class="reviews-slider__track" id="reviewsTrack">
+            <!-- Reviews rendered by JS -->
+          </div>
+          <button class="reviews-slider__nav reviews-slider__nav--next" id="reviewNext" aria-label="Next review">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+          <div class="reviews-slider__dots" id="reviewDots"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ════════════════════════════════════════════
+       FOOTER
+       ════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <div class="footer__brand-name">🎨 Sarojit Pal Art</div>
+          <p class="footer__brand-desc">Inspiring visual storytellers through world-class art instruction. Learn
+            painting, portraiture, and drawing from a professional artist and mentor.</p>
+        </div>
+        <div>
+          <h6 class="footer__heading">Quick Links</h6>
+          <ul class="footer__links">
+            <li><a href="login.html">Admin Panel</a></li>
+          </ul>
+        </div>
+        <div>
+          <h6 class="footer__heading">Get in Touch</h6>
+          <div class="footer__contact-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            <a href="mailto:palsorojit194@gmail.com">palsorojit194@gmail.com</a>
+          </div>
+          <div class="footer__contact-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <a href="tel:+917908442990">+91 79084 42990</a>
+          </div>
+          <div class="footer__contact-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>Malda - 732142, West Bengal</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>&copy; 2025 Sarojit Pal Art. All rights reserved. | MSME Recognized — Government of India</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/student-auth.js"></script>
+  <script src="js/data.js?v=3"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/lazy-load.js"></script>
+  <script src="js/wishlist.js"></script>
+  <script src="js/courses.js?v=6"></script>
+  <script src="js/reviews.js"></script>
+
+  <script>
+    (function() {
+      // Dynamic Auth Nav
+      if (typeof isStudentAuthenticated === 'function' && isStudentAuthenticated()) {
+        document.getElementById('navLoginBtn').style.display = 'none';
+        document.getElementById('navRegisterBtn').style.display = 'none';
+        document.getElementById('navDashboardBtn').style.display = 'block';
+      }
+    })();
+  </script>
+
+  <!-- Mobile Nav Script -->
+  <script>
+    (function () {
+      const toggle = document.getElementById('mobileMenuToggle');
+      const nav = document.getElementById('mainNav');
+      if (toggle && nav) {
+        // Show toggle on mobile
+        const mq = window.matchMedia('(max-width: 767px)');
+        function handleMQ(e) {
+          toggle.style.display = e.matches ? 'flex' : 'none';
+          nav.style.display = e.matches ? 'none' : 'flex';
+        }
+        mq.addEventListener('change', handleMQ);
+        handleMQ(mq);
+
+        toggle.addEventListener('click', () => {
+          const isOpen = nav.style.display === 'flex';
+          nav.style.display = isOpen ? 'none' : 'flex';
+          if (!isOpen) {
+            nav.style.flexDirection = 'column';
+            nav.style.position = 'absolute';
+            nav.style.top = '100%';
+            nav.style.left = '0';
+            nav.style.right = '0';
+            nav.style.background = 'var(--bg-primary)';
+            nav.style.padding = '1rem';
+            nav.style.borderBottom = '1px solid var(--border-light)';
+            nav.style.boxShadow = 'var(--shadow-lg)';
+            nav.style.gap = '0.75rem';
+            nav.style.zIndex = '100';
+          }
+        });
+      }
+    })();
+  </script>
+  <!-- Course Details Modal -->
+  <div id="courseDetailsModal" class="modal-overlay" style="display:none; position:fixed; inset:0; z-index:var(--z-modal); background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:var(--space-4);">
+    <div class="modal-content" style="background:var(--bg-card); border-radius:var(--radius-xl); max-width:800px; width:100%; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column; animation:fadeIn 0.3s ease; position:relative;">
+      <!-- Content injected by JS -->
+    </div>
+  </div>
+
+</body>
+
+</html>

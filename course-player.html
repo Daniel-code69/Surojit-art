@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Course Player — Sarojit Pal Art</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E▶️%3C/text%3E%3C/svg%3E">
+  
+  <style>
+    .player-layout {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      min-height: 100vh;
+    }
+    
+    .player-main {
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .player-header {
+      padding: var(--space-4) var(--space-6);
+      background: #1e293b;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      border-bottom: 1px solid #334155;
+    }
+    
+    .player-video-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6);
+      background: #000;
+    }
+    
+    .player-video {
+      width: 100%;
+      max-width: 1000px;
+      aspect-ratio: 16/9;
+      background: #1e293b;
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      border: 1px solid #334155;
+    }
+    
+    .player-sidebar {
+      background: var(--bg-primary);
+      border-left: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .player-sidebar__header {
+      padding: var(--space-5);
+      border-bottom: 1px solid var(--border-light);
+    }
+    
+    .lesson-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    
+    .lesson-item {
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      transition: all var(--transition-fast);
+    }
+    
+    .lesson-item:hover {
+      border-color: var(--primary-blue);
+    }
+    
+    .lesson-item.active {
+      background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(124,58,237,0.1));
+      border-color: var(--primary-blue);
+    }
+    
+    .lesson-item__icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    
+    .lesson-item.active .lesson-item__icon {
+      background: var(--primary-blue);
+      color: white;
+    }
+    
+    @media (max-width: 992px) {
+      .player-layout {
+        grid-template-columns: 1fr;
+      }
+      .player-video-wrapper {
+        min-height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="player-layout">
+    <!-- Main Video Area -->
+    <div class="player-main">
+      <div class="player-header">
+        <a href="student-dashboard.html" style="color:white;text-decoration:none;display:flex;align-items:center;gap:0.5rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Dashboard
+        </a>
+        <h2 style="font-size:1.1rem;margin-left:auto;font-weight:600;" id="courseTitle">Loading Course...</h2>
+      </div>
+      
+      <div class="player-video-wrapper">
+        <div class="player-video" id="videoContainer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="64" height="64" style="margin-bottom:1rem;color:#475569;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          <h3 style="font-size:1.5rem;margin-bottom:0.5rem;">Select a Lesson</h3>
+          <p style="color:#94a3b8;">Choose a lesson from the sidebar to begin watching.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sidebar / Lesson List -->
+    <div class="player-sidebar">
+      <div class="player-sidebar__header">
+        <h3 style="font-size:1.25rem;font-weight:bold;margin-bottom:0.25rem;">Course Content</h3>
+        <p style="font-size:0.875rem;color:var(--text-secondary);" id="lessonCount">0 Lessons</p>
+      </div>
+      <div class="lesson-list" id="lessonList">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/student-auth.js"></script>
+  <script src="js/data.js?v=2"></script>
+  <script>
+    // Protect route
+    if (!protectStudentRoute()) throw new Error("Unauthenticated");
+
+    // Get course ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('id');
+
+    // Check enrollment
+    if (!isEnrolled(courseId)) {
+      alert("You are not enrolled in this course.");
+      window.location.href = 'student-dashboard.html';
+    }
+
+    // Load course
+    const allCourses = getCourses();
+    const course = allCourses.find(c => c.id === courseId);
+
+    if (!course) {
+      alert("Course not found.");
+      window.location.href = 'student-dashboard.html';
+    }
+
+    document.getElementById('courseTitle').textContent = course.title;
+    
+    const lessons = course.lessons || [];
+    document.getElementById('lessonCount').textContent = `${lessons.length} Lesson${lessons.length !== 1 ? 's' : ''}`;
+
+    const lessonList = document.getElementById('lessonList');
+    
+    if (lessons.length === 0) {
+      lessonList.innerHTML = `<p style="padding:1rem;text-align:center;color:var(--text-secondary);">No lessons available yet.</p>`;
+    } else {
+      lessonList.innerHTML = lessons.map((lesson, index) => `
+        <div class="lesson-item" onclick="playLesson('${lesson.videoUrl}', ${index})" id="lesson-btn-${index}">
+          <div class="lesson-item__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div>
+            <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:0.1rem;">${index + 1}. ${lesson.title}</h4>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function playLesson(url, index) {
+      // Update UI active state
+      document.querySelectorAll('.lesson-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`lesson-btn-${index}`).classList.add('active');
+
+      const container = document.getElementById('videoContainer');
+      
+      // Parse YouTube URL to embed
+      let embedUrl = url;
+      if (url.includes('youtube.com/watch?v=')) {
+        const videoId = new URL(url).searchParams.get('v');
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+      } else if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1].split('?')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+      }
+
+      container.innerHTML = `
+        <iframe width="100%" height="100%" src="${embedUrl}" title="Course Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:var(--radius-lg);"></iframe>
+      `;
+    }
+  </script>
+</body>
+</html>

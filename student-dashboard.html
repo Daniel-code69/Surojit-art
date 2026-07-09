@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Student Dashboard — Sarojit Pal Art</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css?v=3">
+  <link rel="stylesheet" href="css/cards.css">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
+
+  <style>
+    /* ── Header ── */
+    .dashboard-header {
+      background: var(--gradient-hero);
+      padding: var(--space-10) 0;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .dashboard-header::before,
+    .dashboard-header::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+    }
+    .dashboard-header::before { width: 300px; height: 300px; top: -100px; right: -50px; }
+    .dashboard-header::after { width: 150px; height: 150px; bottom: -50px; left: 10%; }
+
+    .dashboard-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-6);
+      position: relative;
+      z-index: 1;
+      flex-wrap: wrap;
+    }
+
+    .dashboard-profile {
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+    }
+
+    .dashboard-profile__img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 3px solid rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .dashboard-profile__info h1 {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-1);
+    }
+
+    .dashboard-profile__info p {
+      opacity: 0.9;
+      font-size: var(--text-sm);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .dashboard-search {
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+    }
+
+    .dashboard-search input {
+      width: 100%;
+      padding: var(--space-3) var(--space-4) var(--space-3) 2.75rem;
+      border-radius: var(--radius-xl);
+      border: 2px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: var(--text-sm);
+      backdrop-filter: blur(10px);
+      transition: all var(--transition-fast);
+    }
+
+    .dashboard-search input::placeholder { color: rgba(255,255,255,0.7); }
+    .dashboard-search input:focus {
+      outline: none;
+      border-color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.2);
+    }
+
+    .dashboard-search svg {
+      position: absolute;
+      left: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.7);
+      pointer-events: none;
+    }
+
+    /* ── Nav ── */
+    .dashboard-nav {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dashboard-nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      overflow-x: auto;
+    }
+
+    .dashboard-tabs {
+      display: flex;
+      gap: var(--space-1);
+    }
+
+    .dashboard-tab {
+      padding: var(--space-4) var(--space-5);
+      background: none;
+      border: none;
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+      cursor: pointer;
+      position: relative;
+      transition: color var(--transition-fast);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .dashboard-tab:hover { color: var(--primary-blue); }
+    .dashboard-tab.active { color: var(--primary-blue); }
+
+    .dashboard-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--gradient-button);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .dashboard-tab .badge {
+      background: var(--primary-blue);
+      color: white;
+      font-size: 0.65rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      font-weight: var(--font-bold);
+    }
+
+    .dashboard-actions {
+      display: flex;
+      gap: var(--space-3);
+      align-items: center;
+    }
+
+    /* ── Content ── */
+    .dashboard-content { padding: var(--space-8) 0; min-height: 50vh; background: var(--bg-primary); }
+
+    .dashboard-section { display: none; animation: fadeIn 0.3s ease; }
+    .dashboard-section.active { display: block; }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    /* ── Course Grid ── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--space-6);
+    }
+
+    /* ── Enhanced Course Card ── */
+    .dc-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      transition: all var(--transition-base);
+      position: relative;
+    }
+
+    .dc-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-blue);
+    }
+
+    .dc-card__image-wrapper {
+      position: relative;
+      height: 160px;
+      overflow: hidden;
+    }
+
+    .dc-card__image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform var(--transition-slow);
+    }
+
+    .dc-card:hover .dc-card__image { transform: scale(1.05); }
+
+    .dc-card__category {
+      position: absolute;
+      top: var(--space-3);
+      left: var(--space-3);
+      background: var(--gradient-button);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: var(--font-bold);
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+    }
+
+    .dc-card__level {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--space-3);
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      backdrop-filter: blur(4px);
+    }
+
+    .dc-card__content { padding: var(--space-4) var(--space-5); }
+
+    .dc-card__title {
+      font-size: var(--text-base);
+      font-weight: var(--font-bold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .dc-card__meta {
+      display: flex;
+      gap: var(--space-4);
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+    }
+
+    .dc-card__meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .dc-card__meta svg { width: 13px; height: 13px; }
+
+    /* Progress Bar */
+    .dc-progress { padding: 0 var(--space-5) var(--space-4); }
+
+    .dc-progress__bar {
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: var(--space-2);
+    }
+
+    .dc-progress__fill {
+      height: 100%;
+      background: var(--gradient-button);
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .dc-progress__text {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      font-weight: var(--font-medium);
+    }
+
+    .dc-card__footer { padding: 0 var(--space-5) var(--space-5); }
+
+    /* ── Player Section ── */
+    .player-section {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    .player-area {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+
+    .player-area__header {
+      padding: var(--space-4) var(--space-5);
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .player-area__header a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: var(--text-sm);
+      opacity: 0.9;
+      transition: opacity var(--transition-fast);
+    }
+
+    .player-area__header a:hover { opacity: 1; }
+
+    .player-area__title {
+      margin-left: auto;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-video {
+      aspect-ratio: 16/9;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      position: relative;
+    }
+
+    .player-video iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .player-video-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+    }
+
+    .player-video-placeholder svg { color: #475569; }
+
+    .player-video-placeholder h3 { font-size: var(--text-lg); }
+    .player-video-placeholder p { color: #94a3b8; font-size: var(--text-sm); }
+
+    /* Lesson Sidebar */
+    .lesson-sidebar {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      position: sticky;
+      top: 72px;
+    }
+
+    .lesson-sidebar__header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .lesson-sidebar__header h3 {
+      font-size: var(--text-base);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-1);
+    }
+
+    .lesson-sidebar__header p {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+    }
+
+    .lesson-list { padding: var(--space-3); max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); }
+
+    .lesson-item {
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      transition: all var(--transition-fast);
+    }
+
+    .lesson-item:hover { border-color: var(--primary-blue); transform: translateX(3px); }
+    .lesson-item.active { background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(124,58,237,0.1)); border-color: var(--primary-blue); }
+
+    .lesson-item__icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .lesson-item.active .lesson-item__icon { background: var(--primary-blue); color: white; }
+    .lesson-item.completed .lesson-item__icon { background: #10B981; color: white; border-color: #10B981; }
+    .lesson-item.incomplete .lesson-item__icon { background: #EF4444; color: white; border-color: #EF4444; }
+
+    .lesson-item__info h4 { font-size: var(--text-sm); font-weight: 600; margin-bottom: 0.1rem; line-height: 1.3; }
+    .lesson-item__info p { font-size: var(--text-xs); color: var(--text-secondary); }
+
+    /* ── Review Section ── */
+    .review-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      padding: var(--space-6);
+      margin-top: var(--space-6);
+    }
+
+    .review-section h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .review-form { display: flex; flex-direction: column; gap: var(--space-4); }
+
+    .star-input { display: flex; gap: var(--space-1); }
+
+    .star-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: color var(--transition-fast), transform var(--transition-fast);
+      font-size: 1.5rem;
+      color: #d1d5db;
+    }
+
+    .star-btn svg {
+      width: 28px;
+      height: 28px;
+      fill: currentColor;
+    }
+
+    .star-btn.filled { color: #F59E0B; }
+    .star-btn:hover { transform: scale(1.2); }
+
+    .review-form textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: var(--space-3);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      font-family: inherit;
+      font-size: var(--text-sm);
+      resize: vertical;
+      transition: border-color var(--transition-fast);
+    }
+
+    .review-form textarea:focus { outline: none; border-color: var(--primary-blue); }
+
+    .review-list { margin-top: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
+
+    .review-item {
+      padding: var(--space-4);
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+    }
+
+    .review-item__header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
+
+    .review-item__avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--gradient-button);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .review-item__name { font-weight: var(--font-semibold); font-size: var(--text-sm); }
+    .review-item__date { font-size: var(--text-xs); color: var(--text-secondary); }
+
+    .review-item__stars { display: flex; gap: 2px; margin-bottom: var(--space-2); }
+    .review-item__stars svg { width: 14px; height: 14px; }
+
+    .review-item__text { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.6; }
+
+    /* ── Wishlist ── */
+    .wishlist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-5); }
+
+    .wishlist-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      transition: all var(--transition-base);
+    }
+
+    .wishlist-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+    .wishlist-card__image { height: 140px; overflow: hidden; position: relative; }
+    .wishlist-card__image img { width: 100%; height: 100%; object-fit: cover; }
+
+    .wishlist-card__remove {
+      position: absolute;
+      top: var(--space-2);
+      right: var(--space-2);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      transition: background var(--transition-fast);
+    }
+
+    .wishlist-card__remove:hover { background: #EF4444; }
+
+    .wishlist-card__body { padding: var(--space-4); }
+    .wishlist-card__title { font-weight: var(--font-bold); font-size: var(--text-sm); margin-bottom: var(--space-2); }
+    .wishlist-card__price { font-size: var(--text-base); color: var(--primary-blue); font-weight: 700; margin-bottom: var(--space-3); }
+
+    .wishlist-card__actions { display: flex; gap: var(--space-2); }
+
+    /* ── Settings ── */
+    .settings-layout { display: grid; grid-template-columns: 240px 1fr; gap: var(--space-6); align-items: start; }
+
+    .settings-nav {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      position: sticky;
+      top: 72px;
+    }
+
+    .settings-nav__item {
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      cursor: pointer;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-left: 3px solid transparent;
+      transition: all var(--transition-fast);
+    }
+
+    .settings-nav__item:hover { background: var(--bg-primary); color: var(--text-primary); }
+    .settings-nav__item.active { background: linear-gradient(90deg, rgba(37,99,235,0.08), transparent); color: var(--primary-blue); border-left-color: var(--primary-blue); }
+
+    .settings-panel {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      padding: var(--space-6);
+    }
+
+    .settings-panel h3 { font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-5); }
+
+    .settings-profile { display: flex; align-items: center; gap: var(--space-5); margin-bottom: var(--space-6); }
+
+    .settings-profile__img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--gradient-button);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .settings-profile__name h4 { font-size: var(--text-lg); font-weight: var(--font-bold); }
+    .settings-profile__name p { font-size: var(--text-sm); color: var(--text-secondary); }
+
+    .form-group { margin-bottom: var(--space-4); }
+    .form-group label { display: block; font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary); }
+    .form-group input { width: 100%; padding: var(--space-3); border-radius: var(--radius-lg); border: 1px solid var(--border-light); font-size: var(--text-sm); transition: border-color var(--transition-fast); }
+    .form-group input:focus { outline: none; border-color: var(--primary-blue); }
+
+    /* ── Notifications ── */
+    .notif-list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+    .notif-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      transition: all var(--transition-fast);
+    }
+
+    .notif-item.unread { border-left: 3px solid var(--primary-blue); background: linear-gradient(90deg, rgba(37,99,235,0.04), transparent); }
+
+    .notif-item__icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--primary-blue);
+    }
+
+    .notif-item__content h4 { font-size: var(--text-sm); font-weight: 600; margin-bottom: 0.2rem; }
+    .notif-item__content p { font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.5; }
+    .notif-item__time { font-size: 0.7rem; color: var(--text-tertiary); margin-top: var(--space-1); }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-12) var(--space-4);
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px dashed var(--border-light);
+    }
+
+    .empty-state__icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-4);
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-state h3 { font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-2); }
+    .empty-state p { color: var(--text-secondary); margin-bottom: var(--space-5); max-width: 400px; margin-inline: auto; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .player-section { grid-template-columns: 1fr; }
+      .lesson-sidebar { position: static; }
+      .settings-layout { grid-template-columns: 1fr; }
+      .settings-nav { position: static; }
+      .dashboard-hero { flex-direction: column; align-items: flex-start; }
+      .dashboard-search { max-width: 100%; width: 100%; }
+    }
+
+    @media (max-width: 640px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .wishlist-grid { grid-template-columns: 1fr; }
+      .dashboard-profile__img { width: 60px; height: 60px; font-size: 1.5rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('spa_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <header style="background:var(--bg-primary);border-bottom:1px solid var(--border-light);padding:0.75rem 0;">
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;">
+      <a href="index.html" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;">
+        <span style="font-size:1.5rem;">&#x1F3A8;</span>
+        <span style="font-family:var(--font-display);font-weight:800;font-size:1.15rem;color:var(--text-primary);">Sarojit Pal Art</span>
+      </a>
+      <nav style="display:flex;align-items:center;gap:1.5rem;">
+        <a href="index.html" style="font-size:0.875rem;font-weight:700;color:white;background:var(--gradient-button);padding:var(--space-2) var(--space-4);border-radius:999px;text-decoration:none;box-shadow:0 4px 12px rgba(37,99,235,0.3);transition:0.3s;display:flex;align-items:center;gap:0.35rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Explore Courses
+        </a>
+        <button id="themeToggleBtn" onclick="toggleTheme()" style="background:var(--bg-tertiary);border:none;color:var(--text-primary);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition-fast);" title="Toggle Dark Mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Header -->
+    <section class="dashboard-header">
+      <div class="container">
+        <div class="dashboard-hero">
+          <div class="dashboard-profile">
+            <div class="dashboard-profile__img" id="profileInitials">S</div>
+            <div class="dashboard-profile__info">
+              <h1 id="profileName">Student Name</h1>
+              <p><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <span id="profileEmail">student@example.com</span></p>
+            </div>
+          </div>
+          <div class="dashboard-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Search your courses..." oninput="filterCourses()" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation -->
+    <nav class="dashboard-nav">
+      <div class="container">
+        <div class="dashboard-nav__inner">
+          <div class="dashboard-tabs">
+            <button class="dashboard-tab active" data-target="my-courses">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              My Courses
+              <span class="badge" id="courseCount">0</span>
+            </button>
+            <button class="dashboard-tab" data-target="notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Notifications
+              <span class="badge" id="notifCount">0</span>
+            </button>
+            <button class="dashboard-tab" data-target="wishlist">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              Wishlist
+            </button>
+            <button class="dashboard-tab" data-target="settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Settings
+            </button>
+          </div>
+          <div class="dashboard-actions">
+            <button class="btn btn--outline btn--sm" onclick="logout()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <section class="dashboard-content">
+      <div class="container">
+
+        <!-- My Courses -->
+        <div class="dashboard-section active" id="my-courses">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Continue Learning
+          </h2>
+          <div class="dashboard-grid" id="myCoursesGrid"></div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="dashboard-section" id="notifications">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Notifications
+          </h2>
+          <div class="notif-list" id="notifList"></div>
+        </div>
+
+        <!-- Wishlist -->
+        <div class="dashboard-section" id="wishlist">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Saved Courses
+          </h2>
+          <div class="wishlist-grid" id="wishlistGrid"></div>
+        </div>
+
+        <!-- Settings -->
+        <div class="dashboard-section" id="settings">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Account Settings
+          </h2>
+          <div class="settings-layout">
+            <nav class="settings-nav">
+              <div class="settings-nav__item active" data-panel="profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profile
+              </div>
+              <div class="settings-nav__item" data-panel="password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Change Password
+              </div>
+              <div class="settings-nav__item" data-panel="account">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Account Info
+              </div>
+            </nav>
+            <div class="settings-panel" id="settings-profile">
+              <h3>Edit Profile</h3>
+              <div class="settings-profile">
+                <div class="settings-profile__img" id="settingsProfileImg">S</div>
+                <div class="settings-profile__name">
+                  <h4 id="settingsName">Student Name</h4>
+                  <p id="settingsEmail">student@example.com</p>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="editName" />
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="editEmail" />
+              </div>
+              <button class="btn btn--primary" onclick="saveProfile()">Save Changes</button>
+            </div>
+            <div class="settings-panel" id="settings-password" style="display:none;">
+              <h3>Change Password</h3>
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" id="currentPass" />
+              </div>
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPass" />
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmPass" />
+              </div>
+              <button class="btn btn--primary" onclick="changePassword()">Update Password</button>
+            </div>
+            <div class="settings-panel" id="settings-account" style="display:none;">
+              <h3>Account Information</h3>
+              <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+                <div style="padding:var(--space-3);background:var(--bg-primary);border-radius:var(--radius-md);display:flex;justify-content:space-between;">
+                  <span style="color:var(--text-secondary);font-size:var(--text-sm);">Member Since</span>
+                  <span style="font-weight:600;font-size:var(--text-sm);" id="memberSince">—</span>
+                </div>
+                <div style="padding:var(--space-3);background:var(--bg-primary);border-radius:var(--radius-md);display:flex;justify-content:space-between;">
+                  <span style="color:var(--text-secondary);font-size:var(--text-sm);">Enrolled Courses</span>
+                  <span style="font-weight:600;font-size:var(--text-sm);" id="enrolledCount">0</span>
+                </div>
+                <div style="padding:var(--space-3);background:var(--bg-primary);border-radius:var(--radius-md);display:flex;justify-content:space-between;">
+                  <span style="color:var(--text-secondary);font-size:var(--text-sm);">Completed Courses</span>
+                  <span style="font-weight:600;font-size:var(--text-sm);" id="completedCount">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Course Player Modal -->
+  <div id="playerModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);">
+    <div style="display:grid;grid-template-columns:1fr 340px;height:100vh;max-width:1400px;margin:0 auto;animation:fadeIn 0.3s ease;">
+      <div style="display:flex;flex-direction:column;background:#0f172a; height:100vh; overflow:hidden;">
+        <div style="padding:var(--space-3) var(--space-5);background:#1e293b;color:white;display:flex;align-items:center;gap:var(--space-4);border-bottom:1px solid #334155; flex-shrink:0;">
+          <button onclick="closePlayer()" style="background:none;border:none;color:white;cursor:pointer;display:flex;align-items:center;gap:0.35rem;font-size:0.875rem;opacity:0.9;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+          <span id="playerCourseTitle" style="margin-left:auto;font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; overflow-y:auto; padding:var(--space-4) var(--space-6); background:#0f172a; min-height:0;">
+          <div style="display:flex; justify-content:center; margin-bottom:var(--space-6); flex-shrink:0;">
+            <div id="playerVideoArea" style="width:100%;max-width:1000px;aspect-ratio:16/9;background:#1e293b;border-radius:var(--radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;text-align:center;border:1px solid #334155;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="56" height="56" style="margin-bottom:0.75rem;color:#475569;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+              <h3 style="font-size:1.25rem;margin-bottom:0.35rem;">Select a Lesson</h3>
+              <p style="color:#94a3b8;font-size:0.875rem;">Choose from the sidebar to start learning</p>
+            </div>
+          </div>
+          
+          <!-- Discussion Section -->
+          <div id="lessonCommentsContainer" style="display:none; max-width:1000px; width:100%; margin:0 auto; color:white;">
+            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:var(--space-4);">Lesson Discussion & Ratings</h3>
+            
+            <div style="background:#1e293b; border-radius:var(--radius-lg); padding:var(--space-4); margin-bottom:var(--space-6); border:1px solid #334155;">
+              <div style="margin-bottom:var(--space-3); display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center;">
+                  <span style="font-size:0.875rem; color:#94a3b8; margin-right:12px;">Rate this lesson:</span>
+                  <div class="star-input" id="lessonStarInput"></div>
+                </div>
+                <div>
+                  <input type="file" id="homeworkImageInput" accept="image/*" style="display:none;" onchange="handleHomeworkImageSelect(event)">
+                  <button class="btn btn--sm" onclick="document.getElementById('homeworkImageInput').click()" style="display:flex; align-items:center; gap:0.35rem; background:linear-gradient(135deg, #8b5cf6, #ec4899); color:white; border:none; font-weight:700; padding: 0.5rem 1rem; border-radius: 999px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Attach Photo
+                  </button>
+                </div>
+              </div>
+              <textarea id="lessonCommentText" placeholder="Ask a question or share your thoughts..." style="width:100%; min-height:80px; background:#0f172a; border:1px solid #334155; border-radius:var(--radius-md); padding:var(--space-3); color:white; font-family:inherit; resize:vertical; margin-bottom:var(--space-3);"></textarea>
+              
+              <div id="homeworkImagePreviewContainer" style="display:none; margin-bottom:var(--space-3); position:relative; width:fit-content;">
+                <img id="homeworkImagePreview" src="" style="max-width:200px; max-height:200px; border-radius:var(--radius-md); border:1px solid #334155; object-fit:cover;">
+                <button onclick="clearHomeworkImage()" style="position:absolute; top:-8px; right:-8px; background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; font-weight:bold;">&times;</button>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end;">
+                <button class="btn btn--primary btn--sm" onclick="submitLessonComment()">Post Comment</button>
+              </div>
+            </div>
+
+            <div id="lessonCommentsList" style="display:flex; flex-direction:column; gap:var(--space-4);"></div>
+          </div>
+        </div>
+        <div style="padding:var(--space-4) var(--space-5);background:#1e293b;border-top:1px solid #334155;display:flex;align-items:center;justify-content:space-between; flex-shrink:0;">
+          <button id="prevLessonBtn" onclick="prevLesson()" style="background:none;border:none;color:white;cursor:pointer;display:flex;align-items:center;gap:0.35rem;font-size:0.8rem;opacity:0.8;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+            Previous
+          </button>
+          <div style="display:flex;align-items:center;gap:var(--space-3);">
+            <span id="lessonCounter" style="color:#94a3b8;font-size:0.8rem;">Lesson 1 / 5</span>
+            <button id="markCompleteBtn" onclick="markLessonComplete()" style="background:var(--primary-blue);border:none;color:white;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:0.35rem;font-weight:600;transition:0.2s;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>
+              Mark Complete
+            </button>
+          </div>
+          <button id="nextLessonBtn" onclick="nextLesson()" style="background:none;border:none;color:white;cursor:pointer;display:flex;align-items:center;gap:0.35rem;font-size:0.8rem;opacity:0.8;">
+            Next
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="background:var(--bg-primary);border-left:1px solid #334155;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:var(--space-4);border-bottom:1px solid var(--border-light);">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.2rem;">Course Content</h3>
+          <p style="font-size:0.75rem;color:var(--text-secondary);" id="playerLessonCount">0 Lessons</p>
+          <div style="margin-top:var(--space-3);height:4px;background:var(--bg-tertiary);border-radius:2px;overflow:hidden;">
+            <div id="playerProgressFill" style="height:100%;background:var(--gradient-button);border-radius:2px;transition:width 0.4s ease;width:0%;"></div>
+          </div>
+          <p style="font-size:0.7rem;color:var(--text-secondary);margin-top:var(--space-1);" id="playerProgressText">0% Complete</p>
+        </div>
+        <div id="playerLessonList" style="flex:1;overflow-y:auto;padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-2);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div id="reviewModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:var(--space-4);">
+    <div style="background:var(--bg-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:500px;width:100%;animation:fadeIn 0.3s ease;">
+      <h3 style="font-size:var(--text-lg);font-weight:800;margin-bottom:var(--space-1);">Write a Review</h3>
+      <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--space-4);">Share your experience with this course</p>
+      <div style="margin-bottom:var(--space-4);">
+        <p style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-2);">Rating</p>
+        <div class="star-input" id="starInput"></div>
+      </div>
+      <div class="form-group">
+        <label>Your Feedback</label>
+        <textarea id="reviewText" placeholder="Tell others what you liked about this course..."></textarea>
+      </div>
+      <div style="display:flex;gap:var(--space-3);">
+        <button class="btn btn--outline" onclick="closeReviewModal()" style="flex:1;">Cancel</button>
+        <button class="btn btn--primary" onclick="submitReview()" style="flex:1;">Submit Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Homework Recommendation Modal -->
+  <div id="homeworkRecommendationModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:var(--space-4);">
+    <div style="background:var(--bg-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:500px;width:100%;animation:fadeIn 0.3s ease;text-align:center;">
+      <div style="margin-bottom:var(--space-4);color:var(--color-warning);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="margin:0 auto;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3 style="font-size:var(--text-xl);font-weight:800;margin-bottom:var(--space-2);">Wait! Missing Homework</h3>
+      <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--space-6);line-height:1.6;">
+        Attaching a photo of your work is highly recommended! Without a photo, this lesson will not count towards your 100% course completion.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+        <button class="btn btn--primary" onclick="scrollToHomework()" style="width:100%;background:linear-gradient(135deg, #8b5cf6, #ec4899);border:none;box-shadow:0 4px 12px rgba(139,92,246,0.3);">Upload Photo Now</button>
+        <button class="btn btn--outline" onclick="confirmMarkLessonComplete()" style="width:100%;">Skip for Now</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/student-auth.js"></script>
+  <script src="js/data.js?v=2"></script>
+  <script src="js/utils.js?v=2"></script>
+  <script>
+    // ── Protect Route ──
+    if (!protectStudentRoute()) throw new Error("Unauthenticated");
+
+    const student = getCurrentStudent();
+    let allCourses = [];
+    let myCourses = [];
+    let currentPlayerCourse = null;
+    let currentLessonIndex = 0;
+    let reviewCourseId = null;
+
+    // ── Init ──
+    function init() {
+      allCourses = getCourses();
+      myCourses = getMyCourses();
+
+      document.getElementById('profileName').textContent = student.name;
+      document.getElementById('profileEmail').textContent = student.email;
+      document.getElementById('profileInitials').textContent = student.name.charAt(0).toUpperCase();
+      document.getElementById('settingsName').textContent = student.name;
+      document.getElementById('settingsEmail').textContent = student.email;
+      document.getElementById('settingsProfileImg').textContent = student.name.charAt(0).toUpperCase();
+      document.getElementById('editName').value = student.name;
+      document.getElementById('editEmail').value = student.email;
+
+      const users = getUsers();
+      const user = users.find(u => u.id === student.userId);
+      if (user && user.createdAt) {
+        const date = new Date(user.createdAt);
+        document.getElementById('memberSince').textContent = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+
+      document.getElementById('courseCount').textContent = myCourses.length;
+      document.getElementById('enrolledCount').textContent = myCourses.length;
+      document.getElementById('completedCount').textContent = myCourses.filter(c => getCourseProgress(c.id) >= 100).length;
+
+      // Show review prompt for courses 50%+
+      myCourses.forEach(c => {
+        const p = getCourseProgress(c.id);
+        if (p >= 50 && p < 100 && !hasReviewed(c.id)) {
+          addNotification({
+            id: 'review_' + c.id,
+            icon: 'star',
+            title: 'Review "' + c.title + '"',
+            text: 'You\'ve completed 50%! Share your experience with other students.',
+            time: 'Just now',
+            unread: true
+          });
+        }
+      });
+
+      renderMyCourses();
+      renderNotifications();
+      renderWishlist();
+      setupTabs();
+      setupSettingsNav();
+    }
+
+    // ── Tabs ──
+    function setupTabs() {
+      document.querySelectorAll('.dashboard-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.dashboard-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.target).classList.add('active');
+        });
+      });
+    }
+
+    // ── Settings Nav ──
+    function setupSettingsNav() {
+      document.querySelectorAll('.settings-nav__item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.settings-nav__item').forEach(i => i.classList.remove('active'));
+          document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
+          item.classList.add('active');
+          document.getElementById('settings-' + item.dataset.panel).style.display = 'block';
+        });
+      });
+    }
+
+    // ── Progress Helpers ──
+    function getCourseProgress(courseId) {
+      const progress = JSON.parse(localStorage.getItem('spa_progress')) || {};
+      return progress[courseId] || 0;
+    }
+
+    function saveCourseProgress(courseId, percent) {
+      const progress = JSON.parse(localStorage.getItem('spa_progress')) || {};
+      progress[courseId] = Math.min(100, Math.max(0, percent));
+      localStorage.setItem('spa_progress', JSON.stringify(progress));
+    }
+
+    function getLessonCompleted(courseId, lessonIndex) {
+      const key = `spa_lesson_${courseId}_${lessonIndex}`;
+      return localStorage.getItem(key) === 'true';
+    }
+
+    function setLessonCompleted(courseId, lessonIndex, val) {
+      localStorage.setItem(`spa_lesson_${courseId}_${lessonIndex}`, val ? 'true' : 'false');
+    }
+
+    function hasReviewed(courseId) {
+      const reviews = getReviews();
+      return reviews.some(r => r.courseId === parseInt(courseId) && r.studentName === student.name);
+    }
+
+    // ── Render My Courses ──
+    function renderMyCourses(filter = '') {
+      const grid = document.getElementById('myCoursesGrid');
+      const filtered = myCourses.filter(c => c.title.toLowerCase().includes(filter.toLowerCase()));
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;">
+            <div class="empty-state__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <h3>${filter ? 'No courses match your search' : 'No courses yet'}</h3>
+            <p>${filter ? 'Try a different search term' : 'You haven\'t enrolled in any courses. Explore our catalog to start your creative journey.'}</p>
+            ${!filter ? '<a href="index.html" class="btn btn--primary">Browse Courses</a>' : ''}
+          </div>`;
+        return;
+      }
+
+  grid.innerHTML = filtered.map(course => {
+    const progress = getCourseProgress(course.id);
+    const lessons = course.lessons || [];
+    const completedCount = lessons.filter((_, i) => getLessonCompleted(course.id, i)).length;
+    const rating = calculateAverageRating(course.id);
+    return `
+    <div class="dc-card">
+      <div class="dc-card__image-wrapper">
+        <img src="${course.thumbnail}" alt="${course.title}" class="dc-card__image" loading="lazy">
+        <div class="dc-card__category">${course.category || ''}</div>
+        <div class="dc-card__level">${course.level || 'Beginner'}</div>
+      </div>
+      <div class="dc-card__content">
+        <h3 class="dc-card__title">${course.title}</h3>
+        <div style="display:flex; align-items:center; gap:4px; margin-bottom:var(--space-2); color:#F59E0B; font-size:0.875rem; font-weight:600;">
+          ${generateStarHTML(rating.average, 16)} <span style="color:var(--text-secondary); font-weight:400; margin-left:4px;">(${rating.average})</span>
+        </div>
+        <div class="dc-card__meta">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${course.duration || 'Flexible'}
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            ${lessons.length} Lessons
+          </span>
+        </div>
+      </div>
+      <div class="dc-progress">
+        <div class="dc-progress__bar">
+          <div class="dc-progress__fill" style="width:${progress}%;"></div>
+        </div>
+        <div class="dc-progress__text">
+          <span>${progress}% Complete</span>
+          <span>${completedCount} / ${lessons.length} Lessons</span>
+        </div>
+      </div>
+      <div class="dc-card__footer" style="display:flex; gap:0.5rem;">
+        <button class="btn btn--primary" style="flex:1;" onclick="openPlayer(${course.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          ${progress > 0 ? 'Resume' : 'Start'}
+        </button>
+        <button class="btn btn--outline" style="padding:var(--space-2) var(--space-3);" onclick="openReviewModal(${course.id})" title="Rate Course">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" width="16" height="16" style="color:#F59E0B;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </button>
+      </div>
+    </div>`;
+      }).join('');
+    }
+
+    function filterCourses() {
+      const query = document.getElementById('searchInput').value;
+      renderMyCourses(query);
+    }
+
+    // ── Notifications ──
+    let notifications = [];
+
+    function addNotification(n) {
+      if (!notifications.find(x => x.id === n.id)) {
+        notifications.unshift(n);
+        saveNotifications();
+      }
+    }
+
+    function getNotifications() {
+      return JSON.parse(localStorage.getItem('spa_notifications')) || getDefaultNotifications();
+    }
+
+    function saveNotifications() {
+      localStorage.setItem('spa_notifications', JSON.stringify(notifications));
+    }
+
+    function getDefaultNotifications() {
+      return [
+        { id: 'notif_1', icon: 'book', title: 'New lesson available', text: 'Portrait Mastery Course has a new lesson: "Hair Texture Mastery"', time: '2 hours ago', unread: true },
+        { id: 'notif_2', icon: 'star', title: 'Rate your progress', text: 'You\'re 50% through Colour Creation Batch! Share your experience.', time: '1 day ago', unread: true },
+        { id: 'notif_3', icon: 'bell', title: 'Instructor update', text: 'Sarojit Pal posted an announcement in Advance Batch', time: '3 days ago', unread: false }
+      ];
+    }
+
+    function renderNotifications() {
+      notifications = getNotifications();
+      const list = document.getElementById('notifList');
+      const unread = notifications.filter(n => n.unread).length;
+      document.getElementById('notifCount').textContent = unread;
+
+      if (notifications.length === 0) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-state__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>No notifications</h3><p>You're all caught up!</p></div>`;
+        return;
+      }
+
+      list.innerHTML = notifications.map(n => {
+        const icons = { book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>', star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' };
+        return `
+        <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markNotifRead('${n.id}')">
+          <div class="notif-item__icon">${icons[n.icon] || icons.bell}</div>
+          <div class="notif-item__content">
+            <h4>${n.title}</h4>
+            <p>${n.text}</p>
+            <div class="notif-item__time">${n.time}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function markNotifRead(id) {
+      const n = notifications.find(x => x.id === id);
+      if (n) { n.unread = false; saveNotifications(); renderNotifications(); }
+    }
+
+    // ── Wishlist ──
+    function renderWishlist() {
+      const grid = document.getElementById('wishlistGrid');
+      const wishlistIds = JSON.parse(localStorage.getItem('spa_wishlist')) || [];
+      const wishlistCourses = allCourses.filter(c => wishlistIds.includes(c.id));
+
+      if (wishlistCourses.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><h3>Your wishlist is empty</h3><p>Save courses you're interested in to view them later.</p><a href="index.html" class="btn btn--outline">Browse Courses</a></div>`;
+        return;
+      }
+
+      grid.innerHTML = wishlistCourses.map(course => `
+        <div class="wishlist-card">
+          <div class="wishlist-card__image">
+            <img src="${course.thumbnail}" alt="${course.title}" loading="lazy">
+            <button class="wishlist-card__remove" onclick="removeFromWishlist(${course.id})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="wishlist-card__body">
+            <h3 class="wishlist-card__title">${course.title}</h3>
+            <div class="wishlist-card__price">${formatPrice(course.discountPrice)}</div>
+            <div class="wishlist-card__actions">
+              <button class="btn btn--primary btn--sm" style="flex:1;" onclick="enrollFromWishlist(${course.id})">Enroll Now</button>
+              <button class="btn btn--outline btn--sm" onclick="viewCourseDetails(${course.id})">Details</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function removeFromWishlist(id) {
+      toggleWishlistItem(id);
+      renderWishlist();
+      showToast('Removed from wishlist', 'info');
+    }
+
+    function enrollFromWishlist(id) {
+      const result = enrollInCourse(id);
+      if (result.success) {
+        toggleWishlistItem(id);
+        myCourses = getMyCourses();
+        document.getElementById('courseCount').textContent = myCourses.length;
+        renderWishlist();
+        renderMyCourses();
+        showToast('Enrolled successfully!', 'success');
+      } else {
+        showToast(result.message, 'error');
+      }
+    }
+
+    function viewCourseDetails(id) {
+      window.location.href = 'index.html?id=' + id;
+    }
+
+    // ── Player ──
+    function openPlayer(courseId) {
+      currentPlayerCourse = myCourses.find(c => c.id === courseId);
+      if (!currentPlayerCourse) return;
+
+      const lessons = currentPlayerCourse.lessons || [];
+
+      // Find last watched lesson
+      let lastLesson = 0;
+      for (let i = 0; i < lessons.length; i++) {
+        if (getLessonCompleted(courseId, i)) lastLesson = i;
+      }
+
+      // Find first incomplete lesson
+      for (let i = 0; i < lessons.length; i++) {
+        if (!getLessonCompleted(courseId, i)) { lastLesson = i; break; }
+      }
+      currentLessonIndex = lastLesson;
+
+      document.getElementById('playerCourseTitle').textContent = currentPlayerCourse.title;
+      document.getElementById('playerLessonCount').textContent = `${lessons.length} Lesson${lessons.length !== 1 ? 's' : ''}`;
+      document.getElementById('playerModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+
+      renderPlayerLessons();
+      playCurrentLesson();
+      updatePlayerProgress();
+    }
+
+    function closePlayer() {
+      document.getElementById('playerModal').style.display = 'none';
+      document.body.style.overflow = '';
+      renderMyCourses();
+      renderNotifications();
+    }
+
+    function renderPlayerLessons() {
+      const lessons = currentPlayerCourse.lessons || [];
+      const list = document.getElementById('playerLessonList');
+
+      list.innerHTML = lessons.map((lesson, i) => {
+        const isMarkedCompleted = getLessonCompleted(currentPlayerCourse.id, i);
+        const hasPic = hasHomework(currentPlayerCourse.id, i);
+        const fullyCompleted = isMarkedCompleted && hasPic;
+        const missingPhoto = isMarkedCompleted && !hasPic;
+
+        const active = i === currentLessonIndex;
+        const locked = i > 0 && !getLessonCompleted(currentPlayerCourse.id, i - 1);
+
+        let iconHTML = i + 1;
+        let statusText = active ? 'Now playing' : 'Click to watch';
+
+        if (fullyCompleted) {
+          iconHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>';
+          statusText = 'Completed';
+        } else if (missingPhoto) {
+          iconHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+          statusText = 'Incomplete (No Photo)';
+        } else if (locked) {
+          iconHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+          statusText = 'Locked (Complete previous)';
+        }
+
+        return `
+        <div class="lesson-item ${active ? 'active' : ''} ${fullyCompleted ? 'completed' : ''} ${missingPhoto ? 'incomplete' : ''} ${locked ? 'locked' : ''}" onclick="selectLesson(${i})">
+          <div class="lesson-item__icon">${iconHTML}</div>
+          <div class="lesson-item__info">
+            <h4>${lesson.title}</h4>
+            <p>${statusText}</p>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function selectLesson(index) {
+      if (index > 0 && !getLessonCompleted(currentPlayerCourse.id, index - 1)) {
+        showToast('Please complete previous lessons first', 'error');
+        return;
+      }
+      currentLessonIndex = index;
+      renderPlayerLessons();
+      playCurrentLesson();
+      updatePlayerProgress();
+    }
+
+    function playCurrentLesson() {
+      const lessons = currentPlayerCourse.lessons || [];
+      const lesson = lessons[currentLessonIndex];
+      const area = document.getElementById('playerVideoArea');
+
+      document.getElementById('lessonCounter').textContent = `Lesson ${currentLessonIndex + 1} / ${lessons.length}`;
+      const isCompleted = getLessonCompleted(currentPlayerCourse.id, currentLessonIndex);
+      const markBtn = document.getElementById('markCompleteBtn');
+      if (isCompleted) {
+        markBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg> Completed';
+        markBtn.style.background = 'var(--color-success)';
+      } else {
+        markBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg> Mark Complete';
+        markBtn.style.background = 'var(--primary-blue)';
+      }
+
+      if (!lesson.videoUrl) {
+        area.innerHTML = `<div class="player-video-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="56" height="56"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg><h3>${lesson.title}</h3><p>Video coming soon. Check back later!</p></div>`;
+        return;
+      }
+
+      let embedUrl = lesson.videoUrl;
+      if (lesson.videoUrl.includes('youtube.com/watch?v=')) {
+        const videoId = new URL(lesson.videoUrl).searchParams.get('v');
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+      } else if (lesson.videoUrl.includes('youtu.be/')) {
+        const videoId = lesson.videoUrl.split('youtu.be/')[1].split('?')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+      }
+
+      area.innerHTML = `
+        <div style="position:relative; width:100%; height:100%;">
+          <iframe width="100%" height="100%" src="${embedUrl}" title="${lesson.title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <!-- Invisible shields to block YouTube redirects -->
+          <div style="position:absolute; top:0; left:0; width:100%; height:70px; z-index:10; background:transparent;"></div>
+          <div style="position:absolute; bottom:40px; right:0; width:200px; height:70px; z-index:10; background:transparent;"></div>
+        </div>
+      `;
+      
+      renderLessonComments();
+    }
+
+    function hasHomework(courseId, lessonIndex) {
+      const comments = getLessonComments(courseId, lessonIndex);
+      return comments.some(c => c.image !== null && c.image !== undefined);
+    }
+
+    function updatePlayerProgress() {
+      const lessons = currentPlayerCourse.lessons || [];
+      const completed = lessons.filter((_, i) => getLessonCompleted(currentPlayerCourse.id, i) && hasHomework(currentPlayerCourse.id, i)).length;
+      const percent = lessons.length > 0 ? Math.round((completed / lessons.length) * 100) : 0;
+
+      document.getElementById('playerProgressFill').style.width = percent + '%';
+      document.getElementById('playerProgressText').textContent = percent + '% Complete';
+
+      saveCourseProgress(currentPlayerCourse.id, percent);
+    }
+
+    function markLessonComplete() {
+      const courseId = currentPlayerCourse.id;
+      const isCompleted = getLessonCompleted(courseId, currentLessonIndex);
+
+      if (!isCompleted) {
+        if (!hasHomework(courseId, currentLessonIndex)) {
+          document.getElementById('homeworkRecommendationModal').style.display = 'flex';
+          return;
+        }
+        confirmMarkLessonComplete();
+      } else {
+        setLessonCompleted(courseId, currentLessonIndex, false);
+        showToast('Lesson marked as incomplete.', 'info');
+        updatePlayerProgress();
+        renderPlayerLessons();
+        renderMyCourses();
+        playCurrentLesson();
+      }
+    }
+
+    function confirmMarkLessonComplete() {
+      document.getElementById('homeworkRecommendationModal').style.display = 'none';
+      const courseId = currentPlayerCourse.id;
+      
+      setLessonCompleted(courseId, currentLessonIndex, true);
+      showToast('Lesson completed!', 'success');
+
+      const lessons = currentPlayerCourse.lessons || [];
+      const completed = lessons.filter((_, i) => getLessonCompleted(courseId, i) && hasHomework(courseId, i)).length;
+      const percent = lessons.length > 0 ? Math.round((completed / lessons.length) * 100) : 0;
+
+      if (percent >= 50 && !hasReviewed(courseId)) {
+        openReviewModal(courseId);
+      }
+
+      updatePlayerProgress();
+      renderPlayerLessons();
+      renderMyCourses();
+      playCurrentLesson();
+    }
+
+    function scrollToHomework() {
+      document.getElementById('homeworkRecommendationModal').style.display = 'none';
+      const container = document.getElementById('lessonCommentsContainer');
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      const btn = document.getElementById('homeworkImageInput').nextElementSibling;
+      btn.style.transition = 'transform 0.3s ease';
+      btn.style.transform = 'scale(1.15)';
+      setTimeout(() => btn.style.transform = 'scale(1)', 300);
+      setTimeout(() => btn.style.transform = 'scale(1.15)', 600);
+      setTimeout(() => btn.style.transform = 'scale(1)', 900);
+      
+      // Automatically open the file dialog
+      setTimeout(() => {
+        document.getElementById('homeworkImageInput').click();
+      }, 400); // slight delay to allow scroll to start
+    }
+
+    function nextLesson() {
+      const lessons = currentPlayerCourse.lessons || [];
+      if (currentLessonIndex < lessons.length - 1) {
+        if (!getLessonCompleted(currentPlayerCourse.id, currentLessonIndex)) {
+          showToast('Please mark this lesson as complete to unlock the next one', 'error');
+          return;
+        }
+        currentLessonIndex++;
+        renderPlayerLessons();
+        playCurrentLesson();
+        updatePlayerProgress();
+      }
+    }
+
+    function prevLesson() {
+      if (currentLessonIndex > 0) {
+        currentLessonIndex--;
+        renderPlayerLessons();
+        playCurrentLesson();
+        updatePlayerProgress();
+      }
+    }
+
+    // ── Lesson Comments ──
+    let currentLessonRating = 0;
+    let currentLessonImageBase64 = null;
+
+    function handleHomeworkImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file.', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const MAX_SIZE = 800;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          currentLessonImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          
+          document.getElementById('homeworkImagePreview').src = currentLessonImageBase64;
+          document.getElementById('homeworkImagePreviewContainer').style.display = 'block';
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearHomeworkImage() {
+      currentLessonImageBase64 = null;
+      document.getElementById('homeworkImageInput').value = '';
+      document.getElementById('homeworkImagePreviewContainer').style.display = 'none';
+      document.getElementById('homeworkImagePreview').src = '';
+    }
+
+    function renderLessonComments() {
+      const container = document.getElementById('lessonCommentsContainer');
+      const list = document.getElementById('lessonCommentsList');
+      const starInput = document.getElementById('lessonStarInput');
+      
+      // Reset input
+      document.getElementById('lessonCommentText').value = '';
+      currentLessonRating = 0;
+      clearHomeworkImage();
+      
+      // Render stars
+      starInput.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        starInput.innerHTML += `<button class="star-btn" onclick="setLessonRating(${i})" style="color:var(--border-medium);background:none;border:none;cursor:pointer;padding:0;transition:0.2s;"><svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>`;
+      }
+
+      const comments = getLessonComments(currentPlayerCourse.id, currentLessonIndex);
+      if (comments.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-secondary);font-size:0.875rem;text-align:center;padding:var(--space-4);">No comments yet. Be the first to start the discussion!</p>';
+      } else {
+        list.innerHTML = comments.map(c => `
+          <div style="background:#1e293b;border-radius:var(--radius-md);padding:var(--space-4);border:1px solid #334155;">
+            <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-blue);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;">
+                ${c.studentName.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div style="font-size:0.875rem;font-weight:600;">${c.studentName}</div>
+                <div style="font-size:0.7rem;color:#94a3b8;">${new Date(c.date).toLocaleDateString()}</div>
+              </div>
+              <div style="margin-left:auto;display:flex;gap:2px;color:var(--color-star);">
+                ${Array(5).fill(0).map((_, i) => `<svg viewBox="0 0 24 24" fill="${i < c.rating ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join('')}
+              </div>
+            </div>
+            ${c.text ? `<p style="font-size:0.875rem;color:#cbd5e1;line-height:1.5;white-space:pre-wrap;margin-bottom:${c.image ? 'var(--space-3)' : '0'};">${c.text}</p>` : ''}
+            ${c.image ? `
+              <div style="position:relative; display:inline-block; margin-top:var(--space-2);">
+                <img src="${c.image}" style="max-width:100%; border-radius:var(--radius-md); border:1px solid #334155;">
+                ${c.studentName === student.name ? `<button onclick="deletePhoto(${c.id})" style="position:absolute; top:-8px; right:-8px; background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.5);" title="Delete Photo">&times;</button>` : ''}
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+
+      container.style.display = 'block';
+    }
+
+    function setLessonRating(val) {
+      currentLessonRating = val;
+      const btns = document.getElementById('lessonStarInput').querySelectorAll('button');
+      btns.forEach((btn, idx) => {
+        btn.style.color = idx < val ? 'var(--color-star)' : 'var(--border-medium)';
+      });
+    }
+
+    function submitLessonComment() {
+      const text = document.getElementById('lessonCommentText').value.trim();
+      if (!text && currentLessonRating === 0 && !currentLessonImageBase64) {
+        showToast('Please provide a rating, a comment, or attach a photo.', 'error');
+        return;
+      }
+      
+      addLessonComment(currentPlayerCourse.id, currentLessonIndex, {
+        studentName: student.name,
+        text: text,
+        rating: currentLessonRating,
+        image: currentLessonImageBase64
+      });
+      
+      showToast('Comment posted!', 'success');
+      renderLessonComments();
+      updatePlayerProgress();
+      renderPlayerLessons();
+    }
+
+    function deletePhoto(commentId) {
+      if (confirm('Are you sure you want to delete this photo? If you have no other photos for this lesson, it may become marked as Incomplete.')) {
+        deleteLessonCommentPhoto(commentId);
+        showToast('Photo deleted', 'success');
+        renderLessonComments();
+        updatePlayerProgress();
+        renderPlayerLessons();
+      }
+    }
+
+    // ── Review Modal ──
+    function openReviewModal(courseId) {
+      reviewCourseId = courseId;
+      const modal = document.getElementById('reviewModal');
+      modal.style.display = 'flex';
+
+      const course = allCourses.find(c => c.id === courseId);
+      modal.querySelector('h3').textContent = 'Review "' + (course ? course.title : 'Course') + '"';
+
+      // Render star input
+      const starInput = document.getElementById('starInput');
+      starInput.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        starInput.innerHTML += `<button class="star-btn" data-val="${i}" onclick="setRating(${i})"><svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>`;
+      }
+      window.currentRating = 0;
+    }
+
+    function closeReviewModal() {
+      document.getElementById('reviewModal').style.display = 'none';
+      reviewCourseId = null;
+    }
+
+    function setRating(val) {
+      window.currentRating = val;
+      document.querySelectorAll('.star-btn').forEach(btn => {
+        btn.classList.toggle('filled', parseInt(btn.dataset.val) <= val);
+      });
+    }
+
+    function submitReview() {
+      if (!window.currentRating) { showToast('Please select a rating', 'error'); return; }
+      const text = document.getElementById('reviewText').value.trim();
+
+      addReview({
+        courseId: reviewCourseId,
+        studentName: student.name,
+        rating: window.currentRating,
+        text: text || 'No feedback provided.'
+      });
+
+      closeReviewModal();
+      showToast('Thank you for your review!', 'success');
+
+      const n = notifications.find(x => x.id === 'review_' + reviewCourseId);
+      if (n) { n.unread = false; saveNotifications(); renderNotifications(); }
+    }
+
+    // ── Settings ──
+    function saveProfile() {
+      const name = document.getElementById('editName').value.trim();
+      const email = document.getElementById('editEmail').value.trim();
+
+      if (!name || !email) { showToast('Please fill all fields', 'error'); return; }
+
+      const users = getUsers();
+      const idx = users.findIndex(u => u.id === student.userId);
+      if (idx !== -1) {
+        users[idx].name = name;
+        users[idx].email = email;
+        saveUsers(users);
+
+        const newSession = { ...student, name, email };
+        const remember = localStorage.getItem('spa_student_remember');
+        if (remember) { localStorage.setItem('spa_student_session', JSON.stringify(newSession)); }
+        else { sessionStorage.setItem('spa_student_session', JSON.stringify(newSession)); }
+
+        document.getElementById('profileName').textContent = name;
+        document.getElementById('profileEmail').textContent = email;
+        document.getElementById('settingsName').textContent = name;
+        document.getElementById('settingsEmail').textContent = email;
+        document.getElementById('settingsProfileImg').textContent = name.charAt(0).toUpperCase();
+
+        showToast('Profile updated!', 'success');
+      }
+    }
+
+    async function changePassword() {
+      const current = document.getElementById('currentPass').value;
+      const newP = document.getElementById('newPass').value;
+      const confirm = document.getElementById('confirmPass').value;
+
+      if (!current || !newP || !confirm) { showToast('Please fill all fields', 'error'); return; }
+      if (newP.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+      if (newP !== confirm) { showToast('Passwords do not match', 'error'); return; }
+
+      const hash = await hashPassword(current);
+      const users = getUsers();
+      const user = users.find(u => u.id === student.userId);
+
+      if (!user || hash !== user.passwordHash) { showToast('Current password is incorrect', 'error'); return; }
+
+      const newHash = await hashPassword(newP);
+      user.passwordHash = newHash;
+      saveUsers(users);
+
+      document.getElementById('currentPass').value = '';
+      document.getElementById('newPass').value = '';
+      document.getElementById('confirmPass').value = '';
+      showToast('Password updated!', 'success');
+    }
+
+    function logout() {
+      logoutStudent();
+      window.location.href = 'student-login.html';
+    }
+
+    // Auto-save progress on interval
+    setInterval(() => {
+      if (currentPlayerCourse) updatePlayerProgress();
+    }, 30000);
+
+    // Init
+    init();
+  </script>
+</body>
+</html>

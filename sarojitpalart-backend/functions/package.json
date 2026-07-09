@@ -1,0 +1,31 @@
+{
+  "name": "sarojitpalart-backend",
+  "version": "1.0.0",
+  "description": "Backend for Sarojit Pal Art course platform",
+  "main": "src/index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions,firestore,auth,storage,hosting",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "firebase-admin": "^11.11.0",
+    "firebase-functions": "^4.5.0",
+    "node-telegram-bot-api": "^0.64.0",
+    "nodemailer": "^6.9.7",
+    "razorpay": "^2.9.2",
+    "uuid": "^9.0.0",
+    "zod": "^3.22.4"
+  },
+  "private": true
+}

@@ -1,0 +1,158 @@
+/* ===================================================
+   RESPONSIVE STYLES
+   =================================================== */
+
+/* ── Large Desktop (1200px+) ── */
+@media (min-width: 1200px) {
+  .courses-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Desktop (992-1199px) ── */
+@media (max-width: 1199px) {
+  .courses-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .footer__inner {
+    grid-template-columns: 1.5fr 1fr 1fr;
+  }
+}
+
+/* ── Tablet (768-991px) ── */
+@media (max-width: 991px) {
+  .courses-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+  }
+
+  .hero {
+    padding: var(--space-16) var(--space-4) var(--space-12);
+    min-height: 280px;
+  }
+
+  .hero__title {
+    font-size: var(--text-3xl);
+  }
+
+  .filters__inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters__group {
+    justify-content: center;
+  }
+
+  .filters__right {
+    justify-content: center;
+  }
+
+  .review-card {
+    min-width: 300px;
+  }
+
+  .footer__inner {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+  }
+}
+
+/* ── Mobile (≤767px) ── */
+@media (max-width: 767px) {
+  :root {
+    --container-padding: 1rem;
+  }
+
+  .courses-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .hero {
+    padding: var(--space-12) var(--space-4) var(--space-10);
+    min-height: 240px;
+  }
+
+  .hero__title {
+    font-size: var(--text-2xl);
+  }
+
+  .hero__subtitle {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-6);
+  }
+
+  .hero__search-input {
+    padding: var(--space-3) var(--space-5);
+    padding-right: 48px;
+    font-size: var(--text-sm);
+  }
+
+  .hero__search-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .filters {
+    padding: var(--space-3) 0;
+  }
+
+  .filters__group {
+    gap: var(--space-2);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+  }
+
+  .filter-select__trigger {
+    min-width: 120px;
+    font-size: var(--text-xs);
+    padding: var(--space-2) var(--space-3);
+    padding-right: var(--space-6);
+    height: 36px;
+  }
+
+  .reviews-slider {
+    padding: 0 var(--space-2);
+  }
+
+  .reviews-slider__nav {
+    display: none;
+  }
+
+  .review-card {
+    min-width: 280px;
+  }
+
+  .reviews-section__title {
+    font-size: var(--text-2xl);
+  }
+
+  .footer__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+
+  .course-card__enroll {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+  }
+}
+
+/* ── Small Mobile (≤480px) ── */
+@media (max-width: 480px) {
+  .hero__title {
+    font-size: 1.5rem;
+  }
+
+  .courses-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .course-card__footer {
+    flex-direction: row;
+    gap: var(--space-3);
+  }
+}
