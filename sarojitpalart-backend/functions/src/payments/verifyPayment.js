@@ -4,7 +4,8 @@ const crypto = require('crypto');
 const { admin, db, config } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyStudent } = require('../middleware/auth');
-const telegramService = require('../telegram/service');
+// Telegram video-delivery disabled — video access is handled via Firestore rules + API gating
+// const telegramService = require('../telegram/service');
 const { sendPurchaseConfirmation } = require('../email/service');
 
 const router = express.Router();
@@ -53,7 +54,6 @@ router.post('/', verifyStudent, validate(z.object({
       return res.json({
         success: true,
         message: 'Already enrolled',
-        telegramInviteLink: null,
       });
     }
 
@@ -81,8 +81,6 @@ router.post('/', verifyStudent, validate(z.object({
       courseId,
       courseTitle: orderData.courseTitle,
       studentEmail: req.user.email || orderData.studentId,
-      telegramInviteLink: null,
-      telegramJoinedAt: null,
       enrolledAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -99,19 +97,6 @@ router.post('/', verifyStudent, validate(z.object({
 
     await batch.commit();
 
-    // Step 4: Grant Telegram access (non-blocking)
-    let telegramInviteLink = null;
-    try {
-      telegramInviteLink = await telegramService.grantChannelAccess(uid, courseId);
-    } catch (telErr) {
-      console.error('Telegram grant failed (non-blocking):', telErr);
-    }
-
-    // Save invite link on enrollment if returned
-    if (telegramInviteLink) {
-      await enrollmentRef.update({ telegramInviteLink });
-    }
-
     // Step 5: Send confirmation email (non-blocking)
     try {
       const studentDoc = await db.collection('students').doc(uid).get();
@@ -122,7 +107,7 @@ router.post('/', verifyStudent, validate(z.object({
         orderData.courseTitle,
         orderData.amount,
         orderData.razorpayOrderId,
-        telegramInviteLink,
+        null,
         uid,
       );
     } catch (emailErr) {
@@ -131,7 +116,6 @@ router.post('/', verifyStudent, validate(z.object({
 
     res.json({
       success: true,
-      telegramInviteLink,
       enrollmentId: enrollmentRef.id,
     });
   } catch (err) {

@@ -134,6 +134,41 @@ router.put('/:courseId', verifyAdmin, validate(courseSchema.partial()), async (r
   }
 });
 
+// GET /courses/:courseId/lessons-preview - Public: lesson titles & thumbnails only (no videoUrl)
+router.get('/:courseId/lessons-preview', async (req, res, next) => {
+  try {
+    const courseDoc = await db.collection('courses').doc(req.params.courseId).get();
+    if (!courseDoc.exists) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+    const courseData = courseDoc.data();
+    if (courseData.status !== 'PUBLISHED') {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const snapshot = await db.collection('courses')
+      .doc(req.params.courseId)
+      .collection('lessons')
+      .orderBy('order', 'asc')
+      .get();
+
+    const lessons = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      lessons.push({
+        id: doc.id,
+        title: data.title,
+        order: data.order,
+        thumbnailUrl: data.thumbnailUrl || null,
+      });
+    });
+
+    res.json(lessons);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /courses/:courseId - Admin: soft delete
 router.delete('/:courseId', verifyAdmin, async (req, res, next) => {
   try {

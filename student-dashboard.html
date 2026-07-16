@@ -1040,22 +1040,46 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase-init.js"></script>
   <script src="js/student-auth.js"></script>
   <script src="js/data.js?v=2"></script>
   <script src="js/utils.js?v=2"></script>
   <script>
     // ── Protect Route ──
-    if (!protectStudentRoute()) throw new Error("Unauthenticated");
+    initFirebase();
 
-    const student = getCurrentStudent();
     let allCourses = [];
     let myCourses = [];
     let currentPlayerCourse = null;
     let currentLessonIndex = 0;
     let reviewCourseId = null;
+    let student = null;
 
     // ── Init ──
-    function init() {
+    async function init() {
+      // Wait for Firebase auth
+      const firebaseUser = await new Promise(function(resolve) {
+        firebaseAuth.onAuthStateChanged(function(user) {
+          resolve(user);
+        });
+      });
+
+      if (!firebaseUser) {
+        window.location.href = 'student-login.html';
+        return;
+      }
+
+      // Build student object from Firebase user data + localStorage fallback
+      var localStudent = getCurrentStudent();
+      student = {
+        name: firebaseUser.displayName || (localStudent ? localStudent.name : 'Student'),
+        email: firebaseUser.email || (localStudent ? localStudent.email : ''),
+        userId: firebaseUser.uid,
+        createdAt: localStudent ? localStudent.createdAt : Date.now(),
+      };
+
       allCourses = getCourses();
       myCourses = getMyCourses();
 
@@ -1068,11 +1092,12 @@
       document.getElementById('editName').value = student.name;
       document.getElementById('editEmail').value = student.email;
 
-      const users = getUsers();
-      const user = users.find(u => u.id === student.userId);
-      if (user && user.createdAt) {
-        const date = new Date(user.createdAt);
-        document.getElementById('memberSince').textContent = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      const memberSince = document.getElementById('memberSince');
+      if (student.createdAt && student.createdAt !== Date.now()) {
+        const date = new Date(student.createdAt);
+        memberSince.textContent = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      } else {
+        memberSince.textContent = '—';
       }
 
       document.getElementById('courseCount').textContent = myCourses.length;
@@ -1335,11 +1360,29 @@
     }
 
     // ── Player ──
-    function openPlayer(courseId) {
+    let apiLessons = [];
+
+    async function openPlayer(courseId) {
       currentPlayerCourse = myCourses.find(c => c.id === courseId);
       if (!currentPlayerCourse) return;
 
-      const lessons = currentPlayerCourse.lessons || [];
+      // Verify enrollment via API
+      try {
+        if (typeof initFirebase === 'function') {
+          initFirebase();
+          const check = await apiFetch('/enrollments/check/' + courseId);
+          if (!check.enrolled) {
+            showToast('You are not enrolled in this course', 'error');
+            return;
+          }
+          // Fetch lessons from API (includes videoUrl, gated by enrollment)
+          apiLessons = await apiFetch('/courses/' + courseId + '/lessons');
+        }
+      } catch (e) {
+        console.warn('API check failed, falling back to local data:', e);
+      }
+
+      const lessons = apiLessons.length > 0 ? apiLessons : (currentPlayerCourse.lessons || []);
 
       // Find last watched lesson
       let lastLesson = 0;
@@ -1370,8 +1413,12 @@
       renderNotifications();
     }
 
+    function getEffectiveLessons() {
+      return apiLessons.length > 0 ? apiLessons : (currentPlayerCourse ? currentPlayerCourse.lessons || [] : []);
+    }
+
     function renderPlayerLessons() {
-      const lessons = currentPlayerCourse.lessons || [];
+      const lessons = getEffectiveLessons();
       const list = document.getElementById('playerLessonList');
 
       list.innerHTML = lessons.map((lesson, i) => {
@@ -1420,7 +1467,7 @@
     }
 
     function playCurrentLesson() {
-      const lessons = currentPlayerCourse.lessons || [];
+      const lessons = getEffectiveLessons();
       const lesson = lessons[currentLessonIndex];
       const area = document.getElementById('playerVideoArea');
 
@@ -1467,7 +1514,7 @@
     }
 
     function updatePlayerProgress() {
-      const lessons = currentPlayerCourse.lessons || [];
+      const lessons = getEffectiveLessons();
       const completed = lessons.filter((_, i) => getLessonCompleted(currentPlayerCourse.id, i) && hasHomework(currentPlayerCourse.id, i)).length;
       const percent = lessons.length > 0 ? Math.round((completed / lessons.length) * 100) : 0;
 
@@ -1537,7 +1584,7 @@
     }
 
     function nextLesson() {
-      const lessons = currentPlayerCourse.lessons || [];
+      const lessons = getEffectiveLessons();
       if (currentLessonIndex < lessons.length - 1) {
         if (!getLessonCompleted(currentPlayerCourse.id, currentLessonIndex)) {
           showToast('Please mark this lesson as complete to unlock the next one', 'error');
@@ -1551,6 +1598,7 @@
     }
 
     function prevLesson() {
+      const lessons = getEffectiveLessons();
       if (currentLessonIndex > 0) {
         currentLessonIndex--;
         renderPlayerLessons();
@@ -1750,32 +1798,38 @@
     }
 
     // ── Settings ──
-    function saveProfile() {
+    async function saveProfile() {
       const name = document.getElementById('editName').value.trim();
       const email = document.getElementById('editEmail').value.trim();
 
       if (!name || !email) { showToast('Please fill all fields', 'error'); return; }
 
-      const users = getUsers();
-      const idx = users.findIndex(u => u.id === student.userId);
+      // Update via API if Firebase is available
+      try {
+        await apiFetch('/student/profile', {
+          method: 'PATCH',
+          body: { name: name },
+        });
+      } catch (e) {
+        console.warn('API profile update failed, updating locally:', e);
+      }
+
+      // Update local storage fallback
+      var users = getUsers();
+      var idx = users.findIndex(function(u) { return u.email && u.email.toLowerCase() === student.email.toLowerCase(); });
       if (idx !== -1) {
         users[idx].name = name;
-        users[idx].email = email;
         saveUsers(users);
-
-        const newSession = { ...student, name, email };
-        const remember = localStorage.getItem('spa_student_remember');
-        if (remember) { localStorage.setItem('spa_student_session', JSON.stringify(newSession)); }
-        else { sessionStorage.setItem('spa_student_session', JSON.stringify(newSession)); }
-
-        document.getElementById('profileName').textContent = name;
-        document.getElementById('profileEmail').textContent = email;
-        document.getElementById('settingsName').textContent = name;
-        document.getElementById('settingsEmail').textContent = email;
-        document.getElementById('settingsProfileImg').textContent = name.charAt(0).toUpperCase();
-
-        showToast('Profile updated!', 'success');
       }
+
+      student.name = name;
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('profileEmail').textContent = email;
+      document.getElementById('settingsName').textContent = name;
+      document.getElementById('settingsEmail').textContent = email;
+      document.getElementById('settingsProfileImg').textContent = name.charAt(0).toUpperCase();
+
+      showToast('Profile updated!', 'success');
     }
 
     async function changePassword() {
@@ -1787,23 +1841,33 @@
       if (newP.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
       if (newP !== confirm) { showToast('Passwords do not match', 'error'); return; }
 
-      const hash = await hashPassword(current);
-      const users = getUsers();
-      const user = users.find(u => u.id === student.userId);
+      // Firebase handles password changes via reauthentication + update
+      try {
+        var user = firebaseAuth.currentUser;
+        if (!user) { showToast('Not authenticated', 'error'); return; }
 
-      if (!user || hash !== user.passwordHash) { showToast('Current password is incorrect', 'error'); return; }
+        // Re-authenticate
+        var cred = firebase.auth.EmailAuthProvider.credential(user.email, current);
+        await user.reauthenticateWithCredential(cred);
+        await user.updatePassword(newP);
 
-      const newHash = await hashPassword(newP);
-      user.passwordHash = newHash;
-      saveUsers(users);
-
-      document.getElementById('currentPass').value = '';
-      document.getElementById('newPass').value = '';
-      document.getElementById('confirmPass').value = '';
-      showToast('Password updated!', 'success');
+        document.getElementById('currentPass').value = '';
+        document.getElementById('newPass').value = '';
+        document.getElementById('confirmPass').value = '';
+        showToast('Password updated!', 'success');
+      } catch (err) {
+        var message = 'Failed to update password.';
+        if (err.code === 'auth/wrong-password') message = 'Current password is incorrect.';
+        else if (err.code === 'auth/weak-password') message = 'New password must be at least 6 characters.';
+        else if (err.code === 'auth/requires-recent-login') message = 'Please log out and log in again before changing password.';
+        showToast(message, 'error');
+      }
     }
 
-    function logout() {
+    async function logout() {
+      try {
+        if (firebaseAuth) await firebaseAuth.signOut();
+      } catch (e) {}
       logoutStudent();
       window.location.href = 'student-login.html';
     }
@@ -1814,7 +1878,9 @@
     }, 30000);
 
     // Init
-    init();
+    init().catch(function(err) {
+      console.error('Dashboard init error:', err);
+    });
   </script>
 </body>
 </html>

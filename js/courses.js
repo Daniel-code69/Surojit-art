@@ -359,99 +359,109 @@ window.handleEnroll = function(courseId) {
   }
 };
 
-window.openCourseModal = function(courseId, event) {
-  // Prevent modal if clicking on buttons
+window.openCourseModal = async function(courseId, event) {
   if (event.target.closest('.course-card__enroll') || event.target.closest('.course-card__wishlist')) {
     return;
   }
-  
+
   const course = getCourses().find(c => String(c.id) === String(courseId));
   if (!course) return;
-  
+
   const modal = document.getElementById('courseDetailsModal');
   if (!modal) return;
-  
+
   const content = modal.querySelector('.modal-content');
-  
-  // Format syllabus
-  const syllabusHTML = course.syllabus ? course.syllabus.split('\n').map((item) => `
-    <li style="margin-bottom:0.5rem; display:flex; gap:0.5rem;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-blue)" stroke-width="2" width="16" height="16" style="flex-shrink:0; margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg>
-      <span>${item}</span>
-    </li>
-  `).join('') : '<li>No syllabus available</li>';
-  
-  // Find demo video
-  let demoUrl = course.demoVideoUrl;
-  if (!demoUrl) {
-    const demoLesson = course.lessons && course.lessons.find(l => l.videoUrl);
-    if (demoLesson) demoUrl = demoLesson.videoUrl;
+
+  // Fetch lesson previews (public — titles & thumbnails only, no videoUrl)
+  let lessonPreviewHTML = '';
+  try {
+    if (typeof apiFetch === 'function') {
+      const previewLessons = await apiFetch('/courses/' + courseId + '/lessons-preview', { auth: false });
+      if (previewLessons && previewLessons.length > 0) {
+        lessonPreviewHTML = '<h4 style="font-size:1.1rem; margin-bottom:var(--space-3); color:var(--text-primary); margin-top:var(--space-4);">Course Lessons</h4>' +
+          '<div style="display:flex; flex-direction:column; gap:var(--space-2);">' +
+          previewLessons.map(function(l, i) {
+            return '<div style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) var(--space-3); background:var(--bg-primary); border-radius:var(--radius-md); border:1px solid var(--border-light);">' +
+              '<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--text-secondary);flex-shrink:0;">' + (i + 1) + '</div>' +
+              '<div style="flex:1;font-size:0.9rem;font-weight:600;">' + escapeHtml(l.title) + '</div>' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color:var(--text-tertiary);flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
+            '</div>';
+          }).join('') +
+          '</div>';
+      }
+    }
+  } catch (e) {
+    // Non-critical — preview just won't show
   }
+
+  // Only use demoVideoUrl for preview — NEVER fall back to lesson.videoUrl
   let videoHTML = '';
-  if (demoUrl) {
-    let embedUrl = demoUrl;
+  if (course.demoVideoUrl) {
+    let embedUrl = course.demoVideoUrl;
     if (embedUrl.includes('youtube.com/watch?v=')) {
       const videoId = new URL(embedUrl).searchParams.get('v');
-      embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1&showinfo=0`;
+      embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=0&rel=0&modestbranding=1&showinfo=0';
     } else if (embedUrl.includes('youtu.be/')) {
       const videoId = embedUrl.split('youtu.be/')[1].split('?')[0];
-      embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1&showinfo=0`;
+      embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=0&rel=0&modestbranding=1&showinfo=0';
     }
-    videoHTML = `
-      <div style="margin-top:var(--space-4); margin-bottom:var(--space-4);">
-        <h4 style="font-size:1.1rem; margin-bottom:var(--space-2);">Demo Video</h4>
-        <div style="aspect-ratio:16/9; background:#000; border-radius:var(--radius-lg); overflow:hidden; position:relative;">
-          <iframe width="100%" height="100%" src="${embedUrl}" title="Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-          <!-- Invisible shields to block YouTube redirects -->
-          <div style="position:absolute; top:0; left:0; width:100%; height:70px; z-index:10; background:transparent;" title="Video Title"></div>
-          <div style="position:absolute; bottom:40px; right:0; width:200px; height:70px; z-index:10; background:transparent;" title="Watch on YouTube"></div>
-        </div>
-      </div>
-    `;
+    videoHTML =
+      '<div style="margin-top:var(--space-4); margin-bottom:var(--space-4);">' +
+        '<h4 style="font-size:1.1rem; margin-bottom:var(--space-2);">Demo Video</h4>' +
+        '<div style="aspect-ratio:16/9; background:#000; border-radius:var(--radius-lg); overflow:hidden; position:relative;">' +
+          '<iframe width="100%" height="100%" src="' + embedUrl + '" title="Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' +
+          '<div style="position:absolute; top:0; left:0; width:100%; height:70px; z-index:10; background:transparent;" title="Video Title"></div>' +
+          '<div style="position:absolute; bottom:40px; right:0; width:200px; height:70px; z-index:10; background:transparent;" title="Watch on YouTube"></div>' +
+        '</div>' +
+      '</div>';
   }
 
-  content.innerHTML = `
-    <button onclick="closeCourseModal()" style="position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.5); border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; z-index:10;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <div style="height:220px; overflow:hidden; position:relative; flex-shrink:0;">
-      <img src="${course.thumbnail}" style="width:100%; height:100%; object-fit:cover;" alt="${course.title}">
-      <div style="position:absolute; inset:0; background:linear-gradient(to top, var(--bg-card), transparent);"></div>
-    </div>
-    <div style="padding:var(--space-6); margin-top:-60px; position:relative; z-index:2;">
-      <span style="font-size:0.75rem; font-weight:bold; text-transform:uppercase; color:var(--primary-blue); background:rgba(37,99,235,0.1); padding:4px 8px; border-radius:4px;">${course.category}</span>
-      <h2 style="font-size:1.8rem; font-weight:800; margin-top:0.5rem; margin-bottom:0.5rem; color:var(--text-primary); line-height:1.2;">${course.title}</h2>
-      <p style="color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-4);">${course.about || course.description}</p>
-      
-      <div style="display:flex; gap:1.2rem; margin-bottom:var(--space-5); font-size:0.9rem; color:var(--text-secondary); flex-wrap:wrap;">
-        <span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${course.duration || 'Flexible'}</span>
-        <span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ${course.avgRating || 4.5}</span>
-        <span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> ${course.enrollments || 0} Students</span>
-      </div>
+  content.innerHTML =
+    '<button onclick="closeCourseModal()" style="position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.5); border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; z-index:10;">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+    '</button>' +
+    '<div style="height:220px; overflow:hidden; position:relative; flex-shrink:0;">' +
+      '<img src="' + (course.thumbnail || '') + '" style="width:100%; height:100%; object-fit:cover;" alt="' + escapeHtml(course.title) + '">' +
+      '<div style="position:absolute; inset:0; background:linear-gradient(to top, var(--bg-card), transparent);"></div>' +
+    '</div>' +
+    '<div style="padding:var(--space-6); margin-top:-60px; position:relative; z-index:2;">' +
+      '<span style="font-size:0.75rem; font-weight:bold; text-transform:uppercase; color:var(--primary-blue); background:rgba(37,99,235,0.1); padding:4px 8px; border-radius:4px;">' + escapeHtml(course.category) + '</span>' +
+      '<h2 style="font-size:1.8rem; font-weight:800; margin-top:0.5rem; margin-bottom:0.5rem; color:var(--text-primary); line-height:1.2;">' + escapeHtml(course.title) + '</h2>' +
+      '<p style="color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-4);">' + escapeHtml(course.about || course.description) + '</p>' +
+      '<div style="display:flex; gap:1.2rem; margin-bottom:var(--space-5); font-size:0.9rem; color:var(--text-secondary); flex-wrap:wrap;">' +
+        '<span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + (course.duration || 'Flexible') + '</span>' +
+        '<span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ' + (course.avgRating || 4.5) + '</span>' +
+        '<span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> ' + (course.enrollments || 0) + ' Students</span>' +
+      '</div>' +
+      '<div style="border-top:1px solid var(--border-light); padding-top:var(--space-4); margin-bottom:var(--space-4);">' +
+        '<h4 style="font-size:1.1rem; margin-bottom:var(--space-3); color:var(--text-primary);">What you will learn</h4>' +
+        '<ul style="list-style:none; padding:0; color:var(--text-secondary); font-size:0.95rem;">' +
+          (course.syllabus ? course.syllabus.split('\n').map(function(item) {
+            return '<li style="margin-bottom:0.5rem; display:flex; gap:0.5rem;">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-blue)" stroke-width="2" width="16" height="16" style="flex-shrink:0; margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg>' +
+              '<span>' + escapeHtml(item) + '</span>' +
+            '</li>';
+          }).join('') : '<li>No syllabus available</li>') +
+        '</ul>' +
+      '</div>' +
+      lessonPreviewHTML +
+      videoHTML +
+      '<div style="margin-top:var(--space-6); display:flex; gap:1rem; align-items:center; padding-top:var(--space-4); border-top:1px solid var(--border-light);">' +
+        '<div style="font-size:1.5rem; font-weight:800; color:var(--text-primary);">' +
+          (course.pricing === 'free' ? '<span style="color:var(--color-free);">Free</span>' : formatPrice(course.discountPrice)) +
+        '</div>' +
+        '<button class="btn btn--primary" style="flex:1; padding:12px; font-size:1rem;" onclick="handleEnroll(\'' + course.id + '\'); closeCourseModal();">Enroll Now</button>' +
+      '</div>' +
+    '</div>';
 
-      <div style="border-top:1px solid var(--border-light); padding-top:var(--space-4); margin-bottom:var(--space-4);">
-        <h4 style="font-size:1.1rem; margin-bottom:var(--space-3); color:var(--text-primary);">What you will learn</h4>
-        <ul style="list-style:none; padding:0; color:var(--text-secondary); font-size:0.95rem;">
-          ${syllabusHTML}
-        </ul>
-      </div>
-
-      ${videoHTML}
-
-      <div style="margin-top:var(--space-6); display:flex; gap:1rem; align-items:center; padding-top:var(--space-4); border-top:1px solid var(--border-light);">
-        <div style="font-size:1.5rem; font-weight:800; color:var(--text-primary);">
-          ${course.pricing === 'free' ? '<span style="color:var(--color-free);">Free</span>' : formatPrice(course.discountPrice)}
-        </div>
-        <button class="btn btn--primary" style="flex:1; padding:12px; font-size:1rem;" onclick="handleEnroll('${course.id}'); closeCourseModal();">
-          Enroll Now
-        </button>
-      </div>
-    </div>
-  `;
-  
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 };
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 window.closeCourseModal = function() {
   const modal = document.getElementById('courseDetailsModal');

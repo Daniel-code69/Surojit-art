@@ -1,7 +1,8 @@
 const express = require('express');
 const crypto = require('crypto');
 const { admin, db, config } = require('../config');
-const telegramService = require('../telegram/service');
+// Telegram video-delivery disabled — video access is handled via Firestore rules + API gating
+// const telegramService = require('../telegram/service');
 const { sendPurchaseConfirmation } = require('../email/service');
 
 const router = express.Router();
@@ -115,8 +116,6 @@ async function handlePaymentCaptured(event) {
     courseId,
     courseTitle: orderData.courseTitle,
     studentEmail: orderData.studentId,
-    telegramInviteLink: null,
-    telegramJoinedAt: null,
     enrolledAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
@@ -130,16 +129,6 @@ async function handlePaymentCaptured(event) {
   });
 
   await batch.commit();
-
-  // Grant Telegram access
-  try {
-    const link = await telegramService.grantChannelAccess(studentId, courseId);
-    if (link) {
-      await enrollmentRef.update({ telegramInviteLink: link });
-    }
-  } catch (err) {
-    console.error('Webhook Telegram grant failed:', err);
-  }
 
   // Send email
   try {

@@ -38,8 +38,6 @@ const paymentVerifyRoutes = require('./payments/verifyPayment');
 const paymentWebhookRoutes = require('./payments/webhook');
 const enrollmentRoutes = require('./enrollments/index');
 const reviewRoutes = require('./reviews/index');
-const telegramRoutes = require('./telegram/webhook');
-const telegramAdminRoutes = require('./telegram/admin');
 const uploadRoutes = require('./uploads/index');
 
 // Mount routes
@@ -54,8 +52,6 @@ app.use('/api/v1/payments/verify', paymentVerifyRoutes);
 app.use('/api/v1/payments/webhook', paymentWebhookRoutes);
 app.use('/api/v1/enrollments', enrollmentRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
-app.use('/api/v1/telegram', telegramRoutes);
-app.use('/api/v1/telegram', telegramAdminRoutes);
 app.use('/api/v1/uploads', uploadRoutes);
 
 // Health check

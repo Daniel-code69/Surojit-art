@@ -147,14 +147,20 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase-init.js"></script>
   <script src="js/student-auth.js"></script>
   <script>
     (function() {
+      initFirebase();
+
       // If already logged in, redirect to dashboard
-      if (isStudentAuthenticated()) {
-        window.location.href = 'student-dashboard.html';
-        return;
-      }
+      firebaseAuth.onAuthStateChanged(function(user) {
+        if (user) {
+          window.location.href = 'student-dashboard.html';
+        }
+      });
 
       const form = document.getElementById('studentLoginForm');
       const emailInput = document.getElementById('loginEmail');
@@ -169,7 +175,7 @@
       const successText = document.getElementById('loginSuccessText');
 
       // Password Toggle
-      passwordToggle.addEventListener('click', () => {
+      passwordToggle.addEventListener('click', function() {
         const isPassword = passwordInput.type === 'password';
         passwordInput.type = isPassword ? 'text' : 'password';
         eyeIcon.style.display = isPassword ? 'none' : 'block';
@@ -178,7 +184,7 @@
       });
 
       // Real-time Validation
-      emailInput.addEventListener('blur', () => {
+      emailInput.addEventListener('blur', function() {
         if (emailInput.value && !isValidEmail(emailInput.value)) {
           showFieldError('emailGroup', 'emailError', 'Please enter a valid email address');
         } else {
@@ -186,18 +192,18 @@
         }
       });
 
-      emailInput.addEventListener('input', () => {
+      emailInput.addEventListener('input', function() {
         clearFieldError('emailGroup', 'emailError');
         hideBanners();
       });
 
-      passwordInput.addEventListener('input', () => {
+      passwordInput.addEventListener('input', function() {
         clearFieldError('passwordGroup', 'passwordError');
         hideBanners();
       });
 
       // Form Submit
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         hideBanners();
@@ -206,7 +212,6 @@
 
         const email = emailInput.value.trim();
         const password = passwordInput.value;
-        const rememberMe = document.getElementById('rememberMe').checked;
 
         let hasError = false;
 
@@ -227,35 +232,38 @@
 
         setLoading(true);
 
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        try {
+          await firebaseAuth.signInWithEmailAndPassword(email, password);
 
-        const result = await loginStudent(email, password, rememberMe);
-
-        setLoading(false);
-
-        if (result.success) {
-          successText.textContent = result.message;
+          successText.textContent = 'Login successful! Redirecting to dashboard...';
           successBanner.classList.add('visible');
 
-          // Check if there was a redirect saved
-          const redirect = sessionStorage.getItem('spa_redirect_after_login') || result.redirect;
+          const redirect = sessionStorage.getItem('spa_redirect_after_login') || 'student-dashboard.html';
           sessionStorage.removeItem('spa_redirect_after_login');
 
-          setTimeout(() => {
+          setTimeout(function() {
             window.location.href = redirect;
           }, 600);
-        } else {
-          errorText.textContent = result.message;
+        } catch (err) {
+          setLoading(false);
+          var message = 'Invalid email or password.';
+          if (err.code === 'auth/user-not-found') message = 'No account found with this email.';
+          else if (err.code === 'auth/wrong-password') message = 'Invalid password.';
+          else if (err.code === 'auth/too-many-requests') message = 'Too many attempts. Please try again later.';
+          else if (err.code === 'auth/invalid-email') message = 'Invalid email format.';
+          else if (err.code === 'auth/user-disabled') message = 'This account has been disabled.';
+          errorText.textContent = message;
           errorBanner.classList.add('visible');
         }
+
+        setLoading(false);
       });
 
       // Helpers
       function showFieldError(groupId, errorId, message) {
-        const group = document.getElementById(groupId);
-        const error = document.getElementById(errorId);
-        const textEl = error.querySelector('span');
+        var group = document.getElementById(groupId);
+        var error = document.getElementById(errorId);
+        var textEl = error.querySelector('span');
         if (textEl) textEl.textContent = message;
         group.classList.add('login-input-group--error');
         error.classList.add('visible');
@@ -274,16 +282,6 @@
       function setLoading(loading) {
         loginBtn.disabled = loading;
         loginBtn.classList.toggle('login-btn--loading', loading);
-      }
-
-      // Auto-fill email from "Remember Me"
-      const remembered = localStorage.getItem(STUDENT_AUTH_KEYS.REMEMBER);
-      if (remembered) {
-        const session = JSON.parse(localStorage.getItem(STUDENT_AUTH_KEYS.SESSION));
-        if (session && session.email) {
-          emailInput.value = session.email;
-          document.getElementById('rememberMe').checked = true;
-        }
       }
     })();
   </script>

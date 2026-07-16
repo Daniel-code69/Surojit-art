@@ -3,7 +3,8 @@ const { z } = require('zod');
 const { admin, db } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin, verifyStudent } = require('../middleware/auth');
-const telegramService = require('../telegram/service');
+// Telegram video-delivery disabled — video access is handled via Firestore rules + API gating
+// const telegramService = require('../telegram/service');
 
 const router = express.Router();
 
@@ -143,8 +144,6 @@ router.post('/manual', verifyAdmin, validate(z.object({
       courseId,
       courseTitle: courseData.title,
       studentEmail: studentDoc.data().email,
-      telegramInviteLink: null,
-      telegramJoinedAt: null,
       enrolledAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -158,16 +157,6 @@ router.post('/manual', verifyAdmin, validate(z.object({
     });
 
     await batch.commit();
-
-    // Grant Telegram access (non-blocking)
-    try {
-      const link = await telegramService.grantChannelAccess(studentId, courseId);
-      if (link) {
-        await enrollmentRef.update({ telegramInviteLink: link });
-      }
-    } catch (telErr) {
-      console.error('Manual enrollment Telegram grant failed:', telErr);
-    }
 
     res.status(201).json({
       message: 'Student enrolled successfully',
@@ -208,13 +197,6 @@ router.delete('/:enrollmentId', verifyAdmin, async (req, res, next) => {
     });
 
     await batch.commit();
-
-    // Revoke Telegram access (non-blocking)
-    try {
-      await telegramService.revokeChannelAccess(studentId, courseId);
-    } catch (telErr) {
-      console.error('Telegram revoke failed:', telErr);
-    }
 
     res.json({ message: 'Enrollment removed' });
   } catch (err) {

@@ -89,14 +89,6 @@ router.post('/connect-telegram', verifyStudent, validate(z.object({
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Grant access to all currently enrolled courses
-    try {
-      const telegramService = require('../telegram/service');
-      await telegramService.grantAccessToAllEnrolled(uid);
-    } catch (err) {
-      console.error('Failed to grant Telegram access after connect:', err);
-    }
-
     res.json({ message: 'Telegram account connected' });
   } catch (err) {
     next(err);
