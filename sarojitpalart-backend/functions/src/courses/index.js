@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, db } = require('../config');
+const { admin, db, auth } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin, verifyStudent } = require('../middleware/auth');
 
@@ -80,7 +80,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// GET /courses/:courseId - Public: single course
+// GET /courses/:courseId - Public only published; non-published requires admin
 router.get('/:courseId', async (req, res, next) => {
   try {
     const doc = await db.collection('courses').doc(req.params.courseId).get();
@@ -89,8 +89,19 @@ router.get('/:courseId', async (req, res, next) => {
     }
     const data = doc.data();
     if (data.status !== 'PUBLISHED') {
+      // Only an authenticated admin may view draft courses
+      let isAdminUser = false;
       const authHeader = req.headers.authorization;
-      if (!authHeader) {
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        try {
+          const token = authHeader.split('Bearer ')[1];
+          const decoded = await auth.verifyIdToken(token);
+          isAdminUser = decoded.admin === true;
+        } catch (e) {
+          isAdminUser = false;
+        }
+      }
+      if (!isAdminUser) {
         return res.status(404).json({ error: 'Course not found' });
       }
     }

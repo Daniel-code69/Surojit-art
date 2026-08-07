@@ -9,13 +9,12 @@ const router = express.Router();
 
 // POST /payments/webhook - Razorpay webhook (NO auth middleware)
 router.post('/', async (req, res) => {
-  // Always respond 200 synchronously
   try {
     // Verify webhook signature
     const signature = req.headers['x-razorpay-signature'];
     if (!signature) {
       console.error('Webhook: No signature header');
-      return res.status(200).json({ status: 'ok' });
+      return res.status(400).json({ error: 'Missing signature' });
     }
 
     const expectedSig = crypto
@@ -25,35 +24,28 @@ router.post('/', async (req, res) => {
 
     if (expectedSig !== signature) {
       console.error('Webhook: Invalid signature');
-      return res.status(200).json({ status: 'ok' });
+      return res.status(401).json({ error: 'Invalid signature' });
     }
 
     const event = JSON.parse(req.body.toString());
     const eventType = event.event;
 
-    // Process in background - respond 200 immediately
-    res.status(200).json({ status: 'ok' });
+    // Process the event BEFORE responding so Cloud Functions doesn't terminate mid-flight.
+    switch (eventType) {
+      case 'payment.captured':
+        await handlePaymentCaptured(event);
+        break;
+      case 'payment.failed':
+        await handlePaymentFailed(event);
+        break;
+      default:
+        console.log(`Webhook: Unhandled event type: ${eventType}`);
+    }
 
-    // Handle different event types asynchronously
-    setImmediate(async () => {
-      try {
-        switch (eventType) {
-          case 'payment.captured':
-            await handlePaymentCaptured(event);
-            break;
-          case 'payment.failed':
-            await handlePaymentFailed(event);
-            break;
-          default:
-            console.log(`Webhook: Unhandled event type: ${eventType}`);
-        }
-      } catch (err) {
-        console.error('Webhook background processing error:', err);
-      }
-    });
+    res.status(200).json({ status: 'ok' });
   } catch (err) {
     console.error('Webhook error:', err);
-    res.status(200).json({ status: 'ok' });
+    res.status(200).json({ error: 'ok' });
   }
 });
 
@@ -87,7 +79,27 @@ async function handlePaymentCaptured(event) {
     return;
   }
 
+  // Validate that the captured amount matches the order amount.
+  // This prevents forged (but correctly signed by Razorpay) capture events from granting access for a lower amount.
+  const expectedPaise = Math.round(orderData.amount * 100);
+  if (payment.amount !== undefined && expectedPaise !== payment.amount) {
+    console.error(`Webhook: Amount mismatch for order ${orderId}. Expected ${expectedPaise}, got ${payment.amount}`);
+    return;
+  }
+
   const { studentId, courseId } = orderData;
+
+  // Verify the student still exists before touching their doc
+  const studentDoc = await db.collection('students').doc(studentId).get();
+  if (!studentDoc.exists) {
+    console.error(`Webhook: Student ${studentId} not found for order ${orderId}. Marking order as PAID.`);
+    await orderDoc.ref.update({
+      status: 'PAID',
+      razorpayPaymentId: paymentId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return;
+  }
 
   // Check enrollment doesn't already exist
   const enrollmentsSnap = await db.collection('enrollments')
@@ -98,6 +110,12 @@ async function handlePaymentCaptured(event) {
 
   if (!enrollmentsSnap.empty) {
     console.log(`Webhook: Enrollment already exists for student ${studentId} course ${courseId}`);
+    // Still mark the order as PAID since payment was captured
+    await orderDoc.ref.update({
+      status: 'PAID',
+      razorpayPaymentId: paymentId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
     return;
   }
 
@@ -115,7 +133,7 @@ async function handlePaymentCaptured(event) {
     studentId,
     courseId,
     courseTitle: orderData.courseTitle,
-    studentEmail: orderData.studentId,
+    studentEmail: studentDoc.data().email || orderData.studentId,
     enrolledAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
@@ -130,21 +148,18 @@ async function handlePaymentCaptured(event) {
 
   await batch.commit();
 
-  // Send email
+  // Send email (non-blocking)
   try {
-    const studentDoc = await db.collection('students').doc(studentId).get();
-    if (studentDoc.exists) {
-      const student = studentDoc.data();
-      sendPurchaseConfirmation(
-        student.email,
-        student.name,
-        orderData.courseTitle,
-        orderData.amount,
-        orderId,
-        null,
-        studentId,
-      );
-    }
+    const student = studentDoc.data();
+    sendPurchaseConfirmation(
+      student.email,
+      student.name,
+      orderData.courseTitle,
+      orderData.amount,
+      orderId,
+      paymentId,
+      studentId,
+    );
   } catch (err) {
     console.error('Webhook email failed:', err);
   }

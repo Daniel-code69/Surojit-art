@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, db } = require('../config');
+const { admin, db, auth } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin, verifyStudent } = require('../middleware/auth');
 
@@ -12,16 +12,30 @@ const lessonSchema = z.object({
   order: z.number().int().min(0).optional(),
 });
 
-// GET /courses/:courseId/lessons - Student: get lessons (enrollment required)
-router.get('/:courseId/lessons', verifyStudent, async (req, res, next) => {
+// GET /courses/:courseId/lessons - Student or Admin: get lessons (enrollment or admin required)
+router.get('/:courseId/lessons', async (req, res, next) => {
   try {
-    const uid = req.user.uid;
-    const studentDoc = await db.collection('students').doc(uid).get();
-    const studentData = studentDoc.data();
-
-    if (!studentData || !studentData.enrolledCourseIds ||
-        !studentData.enrolledCourseIds.includes(req.params.courseId)) {
-      return res.status(403).json({ error: 'You are not enrolled in this course' });
+    // Route by verifier: admin may fetch without being enrolled
+    let adminMode = false;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split('Bearer ')[1];
+        const decoded = await auth.verifyIdToken(token);
+        adminMode = decoded.admin === true;
+        if (!adminMode) {
+          const studentDoc = await db.collection('students').doc(decoded.uid).get();
+          const studentData = studentDoc.data();
+          if (!studentData || !studentData.enrolledCourseIds ||
+              !studentData.enrolledCourseIds.includes(req.params.courseId)) {
+            return res.status(403).json({ error: 'You are not enrolled in this course' });
+          }
+        }
+      } catch (err) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      }
+    } else {
+      return res.status(401).json({ error: 'No authorization token provided' });
     }
 
     const snapshot = await db.collection('courses')

@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Firebase
+.firebase/
+*.log
+
+# Env files
+.env
+functions/.env
+*.env.local
+*.env.development
+*.env.production
+
+# Build outputs
+dist/
+build/
+public/images/uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

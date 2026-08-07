@@ -26,13 +26,20 @@ const config = {
   },
   adminSetupSecret: process.env.ADMIN_SETUP_SECRET || '',
   firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'sarojitpalart',
-  corsOrigins: [
-    'https://sarojitpalart.com',
-    'http://localhost:5500',
-    'http://localhost:5000',
-    'http://127.0.0.1:5500',
-    'http://127.0.0.1:5000',
-  ],
+  corsOrigins: process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
+    : [
+        'https://sarojitpalart.com',
+        'https://www.sarojitpalart.com',
+        'https://sarojitpalart.web.app',
+        'https://sarojitpalart.firebaseapp.com',
+        'http://localhost:5500',
+        'http://localhost:5000',
+        'http://localhost:5001',
+        'http://127.0.0.1:5500',
+        'http://127.0.0.1:5000',
+        'http://127.0.0.1:5001',
+      ],
 };
 
 module.exports = { admin, db, auth, storage, config };

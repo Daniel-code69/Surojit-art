@@ -6,13 +6,19 @@ const { verifyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// POST /admin/auth/setup - One-time admin setup
+// POST /admin/auth/setup - One-time admin setup (protected by ADMIN_SETUP_SECRET)
 router.post('/setup', validate(z.object({
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(1).max(100),
 })), async (req, res, next) => {
   try {
+    // Require the setup secret so random visitors cannot self-promote to admin
+    const providedSecret = req.headers['x-admin-setup-secret'] || req.body.secret;
+    if (!providedSecret || providedSecret !== config.adminSetupSecret) {
+      return res.status(403).json({ error: 'Invalid setup secret. Provide it via the X-Admin-Setup-Secret header.' });
+    }
+
     // Check if any admin already exists
     const adminSnapshot = await db.collection('admins').limit(1).get();
     if (!adminSnapshot.empty) {

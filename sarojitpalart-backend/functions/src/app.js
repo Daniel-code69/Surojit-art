@@ -12,7 +12,7 @@ app.use(cors({
   credentials: true,
 }));
 
-// Global rate limit: 100 req/min per IP
+// Global rate limit: 100 req/min per IP (relaxed so webhooks are not blocked by the shared quota)
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 100,
@@ -20,7 +20,13 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' },
 });
-app.use(globalLimiter);
+app.use((req, res, next) => {
+  // Skip the global limiter for Razorpay/Telegram webhooks that arrive with signed headers
+  if (req.path === '/api/v1/payments/webhook' && req.headers['x-razorpay-signature']) {
+    return next();
+  }
+  globalLimiter(req, res, next);
+});
 
 // Parse JSON bodies (but NOT for webhooks - those need raw body)
 app.use('/api/v1/payments/webhook', express.raw({ type: 'application/json' }));
@@ -38,6 +44,9 @@ const paymentVerifyRoutes = require('./payments/verifyPayment');
 const paymentWebhookRoutes = require('./payments/webhook');
 const enrollmentRoutes = require('./enrollments/index');
 const reviewRoutes = require('./reviews/index');
+// Telegram video-delivery disabled — the bot is not wired into the API app
+// const telegramAdminRoutes = require('./telegram/admin');
+// const telegramWebhookRoutes = require('./telegram/webhook');
 const uploadRoutes = require('./uploads/index');
 
 // Mount routes
@@ -74,7 +83,8 @@ app.use((err, req, res, next) => {
   if (err instanceof ForbiddenError) {
     return res.status(err.statusCode).json({ error: err.message });
   }
-  if (err.code === 'NOT_FOUND') {
+  // Firestore not-found errors carry a numeric code (e.g. 5) in recent firebase-admin
+  if (err.code === 'NOT_FOUND' || err.code === 5) {
     return res.status(404).json({ error: 'Resource not found' });
   }
   if (err.name === 'ZodError') {
@@ -84,9 +94,10 @@ app.use((err, req, res, next) => {
     });
   }
 
+  // Do NOT leak internal error messages to clients in production
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
-    error: err.message || 'Internal server error',
+    error: statusCode >= 500 ? 'Internal server error' : (err.message || 'Request failed'),
   });
 });
 

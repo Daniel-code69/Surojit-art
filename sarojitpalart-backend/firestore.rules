@@ -26,10 +26,14 @@ service cloud.firestore {
 
     match /students/{studentId} {
       allow read: if isOwner(studentId);
-      allow create: if isAuthenticated() && request.auth.uid == studentId;
+      // Restrict created fields so a user cannot self-enroll via enrolledCourseIds
+      allow create: if isAuthenticated() && request.auth.uid == studentId
+        && request.resource.data.diff(resource).affectedKeys().hasOnly(['name', 'email', 'isVerified', 'enrolledCourseIds', 'telegramUserId', 'telegramUsername', 'createdAt', 'updatedAt'])
+        && request.resource.data.enrolledCourseIds.size() == 0
+        && request.resource.data.isVerified == false;
       allow update: if isOwner(studentId)
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['name', 'email', 'telegramUserId', 'telegramUsername', 'isVerified', 'updatedAt']);
+             .hasOnly(['name', 'email', 'telegramUserId', 'telegramUsername', 'updatedAt']);
       allow delete: if false;
     }
 
@@ -60,12 +64,21 @@ service cloud.firestore {
 
     match /reviews/{reviewId} {
       allow read: if resource.data.approved == true || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
+      // Only the author can create, and only with verified fields
+      allow create: if isAuthenticated()
+        && request.resource.data.studentId == request.auth.uid
+        && request.resource.data.approved == false
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 1000;
       allow update, delete: if isAdmin();
     }
 
     match /meta/{doc} {
-      allow read: if true;
+      // Admin dashboard stats cache is sensitive — do not make it world-readable
+      allow read: if isAdmin();
       allow write: if isAdmin();
     }
   }

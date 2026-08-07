@@ -61,6 +61,19 @@ router.post('/', verifyStudent, validate(z.object({
       return res.status(400).json({ error: 'Order is not in a payable state' });
     }
 
+    // SECURITY: the client-supplied courseId must match the course the order was created for.
+    // Without this, a student could buy a cheap course and request enrollment into an expensive one.
+    if (!orderData.courseId || orderData.courseId !== courseId) {
+      return res.status(400).json({ error: 'Course mismatch: order was created for a different course' });
+    }
+
+    // Verify the paid amount matches the order amount
+    const amountFromPayment = req.body.amount ? Number(req.body.amount) : null;
+    if (amountFromPayment !== null && orderData.amount !== null &&
+        orderData.amount !== undefined && Math.round(orderData.amount * 100) !== amountFromPayment) {
+      return res.status(400).json({ error: 'Payment amount does not match order amount' });
+    }
+
     // Step 3: Batch write - update order, create enrollment, update student, increment course
     const enrollmentRef = db.collection('enrollments').doc();
     const courseRef = db.collection('courses').doc(courseId);
