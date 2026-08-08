@@ -19,6 +19,11 @@ const globalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' },
+  // Cloud Functions (and the emulator) may not populate req.ip; fall back to
+  // the first X-Forwarded-For hop or the socket address for the limiter key.
+  keyGenerator: (req) =>
+    req.ip || (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || 'unknown',
+  validate: { ip: false, xForwardedForHeader: false },
 });
 app.use((req, res, next) => {
   // Skip the global limiter for Razorpay/Telegram webhooks that arrive with signed headers
@@ -35,6 +40,7 @@ app.use(express.json());
 // Routes
 const adminAuthRoutes = require('./admin/auth');
 const adminStatsRoutes = require('./admin/stats');
+const adminCourseListRoutes = require('./admin/adminCourseList');
 const studentProfileRoutes = require('./student/profile');
 const categoryRoutes = require('./categories');
 const courseRoutes = require('./courses/index');
@@ -52,6 +58,7 @@ const uploadRoutes = require('./uploads/index');
 // Mount routes
 app.use('/api/v1/admin/auth', adminAuthRoutes);
 app.use('/api/v1/admin/stats', adminStatsRoutes);
+app.use('/api/v1/admin/courses', adminCourseListRoutes);
 app.use('/api/v1/student', studentProfileRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/courses', courseRoutes);
@@ -65,7 +72,7 @@ app.use('/api/v1/uploads', uploadRoutes);
 
 // Health check
 app.get('/api/v1/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version: 3, timestamp: new Date().toISOString() });
 });
 
 // 404 handler

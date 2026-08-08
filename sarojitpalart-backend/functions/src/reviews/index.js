@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, db } = require('../config');
+const { admin, db, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin, verifyStudent } = require('../middleware/auth');
 
@@ -48,7 +48,7 @@ router.post('/', verifyStudent, validate(z.object({
       rating: req.body.rating,
       text: req.body.text,
       approved: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: fieldValue.serverTimestamp(),
     };
 
     const ref = await db.collection('reviews').add(reviewData);

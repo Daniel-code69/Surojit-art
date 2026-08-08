@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, db } = require('../config');
+const { admin, db, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin } = require('../middleware/auth');
 
@@ -52,7 +52,7 @@ router.post('/', verifyAdmin, validate(z.object({
     const data = {
       name: req.body.name,
       slug,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: fieldValue.serverTimestamp(),
     };
 
     const ref = await db.collection('categories').add(data);

@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, db } = require('../config');
+const { admin, db, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin, verifyStudent } = require('../middleware/auth');
 // Telegram video-delivery disabled — video access is handled via Firestore rules + API gating
@@ -144,16 +144,16 @@ router.post('/manual', verifyAdmin, validate(z.object({
       courseId,
       courseTitle: courseData.title,
       studentEmail: studentDoc.data().email,
-      enrolledAt: admin.firestore.FieldValue.serverTimestamp(),
+      enrolledAt: fieldValue.serverTimestamp(),
     });
 
     batch.update(db.collection('students').doc(studentId), {
-      enrolledCourseIds: admin.firestore.FieldValue.arrayUnion(courseId),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      enrolledCourseIds: fieldValue.arrayUnion(courseId),
+      updatedAt: fieldValue.serverTimestamp(),
     });
 
     batch.update(db.collection('courses').doc(courseId), {
-      enrollmentCount: admin.firestore.FieldValue.increment(1),
+      enrollmentCount: fieldValue.increment(1),
     });
 
     await batch.commit();
@@ -187,13 +187,13 @@ router.delete('/:enrollmentId', verifyAdmin, async (req, res, next) => {
 
     // Remove from student
     batch.update(db.collection('students').doc(studentId), {
-      enrolledCourseIds: admin.firestore.FieldValue.arrayRemove(courseId),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      enrolledCourseIds: fieldValue.arrayRemove(courseId),
+      updatedAt: fieldValue.serverTimestamp(),
     });
 
     // Decrement course count
     batch.update(db.collection('courses').doc(courseId), {
-      enrollmentCount: admin.firestore.FieldValue.increment(-1),
+      enrollmentCount: fieldValue.increment(-1),
     });
 
     await batch.commit();

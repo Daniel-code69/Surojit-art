@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, db, auth } = require('../config');
+const { admin, db, auth, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin, verifyStudent } = require('../middleware/auth');
 
@@ -81,7 +81,7 @@ router.post('/:courseId/lessons', verifyAdmin, validate(lessonSchema), async (re
       title: req.body.title,
       videoUrl: req.body.videoUrl || '',
       order,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: fieldValue.serverTimestamp(),
     };
 
     const ref = await db.collection('courses')

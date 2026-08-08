@@ -3,8 +3,43 @@
    =================================================== */
 
 function initReviews() {
+  syncReviewsFromApi();
   renderReviews();
   setupReviewNavigation();
+}
+
+/**
+ * Map backend review docs into the frontend shape.
+ */
+function mapRemoteReview(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    studentName: r.studentName || 'Student',
+    courseId: r.courseId || null,
+    rating: r.rating || 5,
+    text: r.text || '',
+    date: r.createdAt ? (new Date(r.createdAt.seconds != null ? r.createdAt.seconds * 1000 : r.createdAt).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
+  };
+}
+
+/**
+ * Load approved reviews from the backend API and cache them locally.
+ */
+async function syncReviewsFromApi() {
+  if (typeof apiFetch !== 'function') return;
+  try {
+    const reviews = await apiFetch('/reviews', { auth: false });
+    if (Array.isArray(reviews) && reviews.length > 0) {
+      const mapped = reviews.map(mapRemoteReview).filter(Boolean);
+      saveReviews(mapped);
+      renderReviews();
+      return true;
+    }
+  } catch (e) {
+    // Backend unreachable — keep local demo reviews.
+  }
+  return false;
 }
 
 function renderReviews() {
@@ -20,22 +55,23 @@ function renderReviews() {
 
   track.innerHTML = reviews.map(review => {
     const courses = getCourses();
-    const course = courses.find(c => c.id === review.courseId);
-    const courseName = course ? course.title : 'Art Course';
+    const course = courses.find(c => String(c.id) === String(review.courseId)) ||
+                   courses.find(c => String(c.id) === String(review.courseId || ''));
+    const courseName = course ? escapeHtml(course.title) : 'Art Course';
 
     return `
       <div class="review-card">
         <div class="review-card__header">
           <div class="review-card__avatar">${getInitials(review.studentName)}</div>
           <div class="review-card__info">
-            <span class="review-card__name">${review.studentName}</span>
+            <span class="review-card__name">${escapeHtml(review.studentName)}</span>
             <span class="review-card__role">Student — ${courseName}</span>
           </div>
         </div>
         <div class="review-card__stars">
           ${generateStarHTML(review.rating, 16)}
         </div>
-        <p class="review-card__text">${review.text}</p>
+        <p class="review-card__text">${escapeHtml(review.text)}</p>
       </div>
     `;
   }).join('');
@@ -43,6 +79,8 @@ function renderReviews() {
   // Setup dots
   setupReviewDots(reviews.length);
 }
+
+
 
 function setupReviewNavigation() {
   const prevBtn = document.getElementById('reviewPrev');

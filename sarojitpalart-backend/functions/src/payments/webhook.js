@@ -1,6 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
-const { admin, db, config } = require('../config');
+const { admin, db, config, fieldValue } = require('../config');
 // Telegram video-delivery disabled — video access is handled via Firestore rules + API gating
 // const telegramService = require('../telegram/service');
 const { sendPurchaseConfirmation } = require('../email/service');
@@ -96,7 +96,7 @@ async function handlePaymentCaptured(event) {
     await orderDoc.ref.update({
       status: 'PAID',
       razorpayPaymentId: paymentId,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     });
     return;
   }
@@ -114,7 +114,7 @@ async function handlePaymentCaptured(event) {
     await orderDoc.ref.update({
       status: 'PAID',
       razorpayPaymentId: paymentId,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     });
     return;
   }
@@ -126,7 +126,7 @@ async function handlePaymentCaptured(event) {
   batch.update(orderDoc.ref, {
     status: 'PAID',
     razorpayPaymentId: paymentId,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: fieldValue.serverTimestamp(),
   });
 
   batch.set(enrollmentRef, {
@@ -134,16 +134,16 @@ async function handlePaymentCaptured(event) {
     courseId,
     courseTitle: orderData.courseTitle,
     studentEmail: studentDoc.data().email || orderData.studentId,
-    enrolledAt: admin.firestore.FieldValue.serverTimestamp(),
+    enrolledAt: fieldValue.serverTimestamp(),
   });
 
   batch.update(db.collection('students').doc(studentId), {
-    enrolledCourseIds: admin.firestore.FieldValue.arrayUnion(courseId),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    enrolledCourseIds: fieldValue.arrayUnion(courseId),
+    updatedAt: fieldValue.serverTimestamp(),
   });
 
   batch.update(db.collection('courses').doc(courseId), {
-    enrollmentCount: admin.firestore.FieldValue.increment(1),
+    enrollmentCount: fieldValue.increment(1),
   });
 
   await batch.commit();
@@ -182,7 +182,7 @@ async function handlePaymentFailed(event) {
   if (orderData.status === 'CREATED') {
     await orderDoc.ref.update({
       status: 'FAILED',
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     });
   }
 }

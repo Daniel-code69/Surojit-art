@@ -1,5 +1,5 @@
 const express = require('express');
-const { admin, db, config } = require('../config');
+const { admin, db, config, fieldValue } = require('../config');
 const { getBot } = require('./bot');
 const telegramService = require('./service');
 
@@ -62,7 +62,7 @@ async function handleMessage(message, bot) {
       await db.collection('students').doc(studentId).update({
         telegramUserId,
         telegramUsername,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: fieldValue.serverTimestamp(),
       });
 
       // Grant access to all enrolled courses

@@ -1080,6 +1080,11 @@
         createdAt: localStudent ? localStudent.createdAt : Date.now(),
       };
 
+      // Sync enrollments + courses from the backend for accurate dashboard data.
+      if (typeof syncEnrollmentsFromApi === 'function') {
+        try { await syncEnrollmentsFromApi(); } catch (e) { /* local fallback */ }
+      }
+
       allCourses = getCourses();
       myCourses = getMyCourses();
 
@@ -1199,22 +1204,28 @@
     const lessons = course.lessons || [];
     const completedCount = lessons.filter((_, i) => getLessonCompleted(course.id, i)).length;
     const rating = calculateAverageRating(course.id);
+    const cId = jsString(course.id);
+    const cTitle = escapeHtml(course.title);
+    const cCat = escapeHtml(course.category || '');
+    const cLevel = escapeHtml(course.level || 'Beginner');
+    const cThumb = escapeHtml(course.thumbnail);
+    const cDur = escapeHtml(course.duration || 'Flexible');
     return `
     <div class="dc-card">
       <div class="dc-card__image-wrapper">
-        <img src="${course.thumbnail}" alt="${course.title}" class="dc-card__image" loading="lazy">
-        <div class="dc-card__category">${course.category || ''}</div>
-        <div class="dc-card__level">${course.level || 'Beginner'}</div>
+        <img src="${cThumb}" alt="${cTitle}" class="dc-card__image" loading="lazy">
+        <div class="dc-card__category">${cCat}</div>
+        <div class="dc-card__level">${cLevel}</div>
       </div>
       <div class="dc-card__content">
-        <h3 class="dc-card__title">${course.title}</h3>
+        <h3 class="dc-card__title">${cTitle}</h3>
         <div style="display:flex; align-items:center; gap:4px; margin-bottom:var(--space-2); color:#F59E0B; font-size:0.875rem; font-weight:600;">
           ${generateStarHTML(rating.average, 16)} <span style="color:var(--text-secondary); font-weight:400; margin-left:4px;">(${rating.average})</span>
         </div>
         <div class="dc-card__meta">
           <span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            ${course.duration || 'Flexible'}
+            ${cDur}
           </span>
           <span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -1232,11 +1243,11 @@
         </div>
       </div>
       <div class="dc-card__footer" style="display:flex; gap:0.5rem;">
-        <button class="btn btn--primary" style="flex:1;" onclick="openPlayer(${course.id})">
+        <button class="btn btn--primary" style="flex:1;" onclick='openPlayer("${cId}")'>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           ${progress > 0 ? 'Resume' : 'Start'}
         </button>
-        <button class="btn btn--outline" style="padding:var(--space-2) var(--space-3);" onclick="openReviewModal(${course.id})" title="Rate Course">
+        <button class="btn btn--outline" style="padding:var(--space-2) var(--space-3);" onclick='openReviewModal("${cId}")' title="Rate Course">
           <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" width="16" height="16" style="color:#F59E0B;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </button>
       </div>
@@ -1319,17 +1330,17 @@
       grid.innerHTML = wishlistCourses.map(course => `
         <div class="wishlist-card">
           <div class="wishlist-card__image">
-            <img src="${course.thumbnail}" alt="${course.title}" loading="lazy">
-            <button class="wishlist-card__remove" onclick="removeFromWishlist(${course.id})">
+            <img src="${escapeHtml(course.thumbnail)}" alt="${escapeHtml(course.title)}" loading="lazy">
+            <button class="wishlist-card__remove" onclick='removeFromWishlist("${jsString(course.id)}")'>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <div class="wishlist-card__body">
-            <h3 class="wishlist-card__title">${course.title}</h3>
+            <h3 class="wishlist-card__title">${escapeHtml(course.title)}</h3>
             <div class="wishlist-card__price">${formatPrice(course.discountPrice)}</div>
             <div class="wishlist-card__actions">
-              <button class="btn btn--primary btn--sm" style="flex:1;" onclick="enrollFromWishlist(${course.id})">Enroll Now</button>
-              <button class="btn btn--outline btn--sm" onclick="viewCourseDetails(${course.id})">Details</button>
+              <button class="btn btn--primary btn--sm" style="flex:1;" onclick='enrollFromWishlist("${jsString(course.id)}")'>Enroll Now</button>
+              <button class="btn btn--outline btn--sm" onclick='viewCourseDetails("${jsString(course.id)}")'>Details</button>
             </div>
           </div>
         </div>`).join('');
@@ -1341,19 +1352,24 @@
       showToast('Removed from wishlist', 'info');
     }
 
-    function enrollFromWishlist(id) {
-      const result = enrollInCourse(id);
-      if (result.success) {
-        toggleWishlistItem(id);
-        myCourses = getMyCourses();
-        document.getElementById('courseCount').textContent = myCourses.length;
-        renderWishlist();
-        renderMyCourses();
-        showToast('Enrolled successfully!', 'success');
-      } else {
-        showToast(result.message, 'error');
-      }
-    }
+async function enrollFromWishlist(id) {
+  let result;
+  if (typeof checkoutCourse === 'function') {
+    result = await checkoutCourse(id);
+  } else {
+    result = await enrollInCourse(id);
+  }
+  if (result.success) {
+    toggleWishlistItem(id);
+    myCourses = getMyCourses();
+    document.getElementById('courseCount').textContent = myCourses.length;
+    renderWishlist();
+    renderMyCourses();
+    showToast(result.message || 'Enrolled successfully!', 'success');
+  } else {
+    showToast(result.message, 'error');
+  }
+}
 
     function viewCourseDetails(id) {
       window.location.href = 'index.html?id=' + id;
@@ -1448,7 +1464,7 @@
         <div class="lesson-item ${active ? 'active' : ''} ${fullyCompleted ? 'completed' : ''} ${missingPhoto ? 'incomplete' : ''} ${locked ? 'locked' : ''}" onclick="selectLesson(${i})">
           <div class="lesson-item__icon">${iconHTML}</div>
           <div class="lesson-item__info">
-            <h4>${lesson.title}</h4>
+            <h4>${escapeHtml(lesson.title)}</h4>
             <p>${statusText}</p>
           </div>
         </div>`;
@@ -1483,7 +1499,7 @@
       }
 
       if (!lesson.videoUrl) {
-        area.innerHTML = `<div class="player-video-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="56" height="56"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg><h3>${lesson.title}</h3><p>Video coming soon. Check back later!</p></div>`;
+        area.innerHTML = `<div class="player-video-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="56" height="56"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg><h3>${escapeHtml(lesson.title)}</h3><p>Video coming soon. Check back later!</p></div>`;
         return;
       }
 
@@ -1498,7 +1514,7 @@
 
       area.innerHTML = `
         <div style="position:relative; width:100%; height:100%;">
-          <iframe width="100%" height="100%" src="${embedUrl}" title="${lesson.title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <iframe width="100%" height="100%" src="${escapeHtml(embedUrl)}" title="${escapeHtml(lesson.title)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
           <!-- Invisible shields to block YouTube redirects -->
           <div style="position:absolute; top:0; left:0; width:100%; height:70px; z-index:10; background:transparent;"></div>
           <div style="position:absolute; bottom:40px; right:0; width:200px; height:70px; z-index:10; background:transparent;"></div>
@@ -1687,21 +1703,21 @@
           <div style="background:#1e293b;border-radius:var(--radius-md);padding:var(--space-4);border:1px solid #334155;">
             <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);">
               <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-blue);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;">
-                ${c.studentName.charAt(0).toUpperCase()}
+                ${escapeHtml((c.studentName || '?').charAt(0).toUpperCase())}
               </div>
               <div>
-                <div style="font-size:0.875rem;font-weight:600;">${c.studentName}</div>
+                <div style="font-size:0.875rem;font-weight:600;">${escapeHtml(c.studentName)}</div>
                 <div style="font-size:0.7rem;color:#94a3b8;">${new Date(c.date).toLocaleDateString()}</div>
               </div>
               <div style="margin-left:auto;display:flex;gap:2px;color:var(--color-star);">
                 ${Array(5).fill(0).map((_, i) => `<svg viewBox="0 0 24 24" fill="${i < c.rating ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join('')}
               </div>
             </div>
-            ${c.text ? `<p style="font-size:0.875rem;color:#cbd5e1;line-height:1.5;white-space:pre-wrap;margin-bottom:${c.image ? 'var(--space-3)' : '0'};">${c.text}</p>` : ''}
+            ${c.text ? `<p style="font-size:0.875rem;color:#cbd5e1;line-height:1.5;white-space:pre-wrap;margin-bottom:${c.image ? 'var(--space-3)' : '0'};">${escapeHtml(c.text)}</p>` : ''}
             ${c.image ? `
               <div style="position:relative; display:inline-block; margin-top:var(--space-2);">
-                <img src="${c.image}" style="max-width:100%; border-radius:var(--radius-md); border:1px solid #334155;">
-                ${c.studentName === student.name ? `<button onclick="deletePhoto(${c.id})" style="position:absolute; top:-8px; right:-8px; background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.5);" title="Delete Photo">&times;</button>` : ''}
+                <img src="${escapeHtml(c.image)}" style="max-width:100%; border-radius:var(--radius-md); border:1px solid #334155;">
+                ${escapeHtml(c.studentName) === student.name ? `<button onclick="deletePhoto(${jsString(c.id)})" style="position:absolute; top:-8px; right:-8px; background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.5);" title="Delete Photo">&times;</button>` : ''}
               </div>
             ` : ''}
           </div>
@@ -1783,15 +1799,36 @@
       if (!window.currentRating) { showToast('Please select a rating', 'error'); return; }
       const text = document.getElementById('reviewText').value.trim();
 
-      addReview({
-        courseId: reviewCourseId,
-        studentName: student.name,
-        rating: window.currentRating,
-        text: text || 'No feedback provided.'
-      });
+      // Submit to the backend first (moderated), keep local fallback for offline.
+      if (typeof window.API !== 'undefined' && window.API && typeof window.API.apiFetch === 'function') {
+        window.API.apiFetch('/reviews', {
+          method: 'POST',
+          auth: true,
+          body: {
+            courseId: String(reviewCourseId),
+            rating: window.currentRating,
+            text: text || 'No feedback provided.'
+          }
+        }).catch(() => {
+          // Offline — keep review locally only
+          addReview({
+            courseId: reviewCourseId,
+            studentName: student.name,
+            rating: window.currentRating,
+            text: text || 'No feedback provided.'
+          });
+        });
+      } else {
+        addReview({
+          courseId: reviewCourseId,
+          studentName: student.name,
+          rating: window.currentRating,
+          text: text || 'No feedback provided.'
+        });
+      }
 
       closeReviewModal();
-      showToast('Thank you for your review!', 'success');
+      showToast('Thank you for your review! It will be published once approved.', 'success');
 
       const n = notifications.find(x => x.id === 'review_' + reviewCourseId);
       if (n) { n.unread = false; saveNotifications(); renderNotifications(); }

@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const { FieldValue } = require('firebase-admin/firestore');
 
 admin.initializeApp();
 
@@ -42,4 +43,4 @@ const config = {
       ],
 };
 
-module.exports = { admin, db, auth, storage, config };
+module.exports = { admin, db, auth, storage, config, fieldValue: FieldValue };

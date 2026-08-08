@@ -5,9 +5,202 @@
 let currentEditCourseId = null;
 let currentSection = 'dashboard';
 
+/* ═══════════════════════════════════════════════════
+   BACKEND SYNC — the admin panel reads/writes the same
+   Cloud Functions API the public site uses. The local
+   caches remain as an offline/dev fallback only.
+   ═══════════════════════════════════════════════════ */
+
+const LEVEL_MAP = {
+  'Beginner': 'BEGINNER',
+  'Intermediate': 'INTERMEDIATE',
+  'Advanced': 'ADVANCED',
+  'BEGINNER': 'BEGINNER',
+  'INTERMEDIATE': 'INTERMEDIATE',
+  'ADVANCED': 'ADVANCED',
+};
+
+// name -> backend category doc id
+let _categoryIdMap = {};
+
+function adminApiAvailable() {
+  return !!(window.API && typeof window.API.apiFetch === 'function');
+}
+
+function getCategoryId(name) {
+  return _categoryIdMap[name] || null;
+}
+
+/**
+ * Map a frontend course object into the backend course payload shape.
+ */
+function courseToApi(course) {
+  return {
+    title: course.title,
+    description: course.description || course.about || '',
+    shortDescription: (course.about || course.shortDescription || course.description || '').substring(0, 300),
+    thumbnail: course.thumbnail || 'assets/images/course_portrait.png',
+    price: course.pricing === 'free' ? 0 : (Number(course.originalPrice) || 0),
+    discountedPrice: course.pricing === 'free' ? 0 : (Number(course.discountPrice) || 0),
+    level: LEVEL_MAP[course.level] || LEVEL_MAP['Beginner'],
+    status: course.status ? String(course.status).toUpperCase() : 'DRAFT',
+    categoryId: getCategoryId(course.category) || course.categoryId || '',
+    categoryName: typeof course.category === 'string' ? course.category : (course.categoryName || ''),
+  };
+}
+
+/**
+ * Create or update a course on the backend. Returns created id when online.
+ */
+async function persistCourseToApi(course, courseId) {
+  if (!adminApiAvailable()) return { ok: false, offline: true };
+  const payload = courseToApi(course);
+
+  if (payload.status === 'DRAFT') {
+    // Ensure admin-created courses are visible to students by default.
+    payload.status = 'PUBLISHED';
+  }
+
+  try {
+    let nextId = courseId;
+    if (nextId && /^[A-Za-z0-9]{8,}$/.test(String(nextId))) {
+      await window.API.apiFetch('/courses/' + nextId, { method: 'PUT', auth: true, body: payload });
+    } else {
+      const created = await window.API.apiFetch('/courses', { method: 'POST', auth: true, body: payload });
+      nextId = created.id;
+    }
+
+    // Persist lessons (best-effort, after the course exists).
+    const lessons = course.lessons || [];
+    if (nextId) {
+      for (const lesson of lessons) {
+        if (!lesson || !lesson.title) continue;
+        try {
+          await window.API.apiFetch('/courses/' + nextId + '/lessons', {
+            method: 'POST', auth: true,
+            body: { title: lesson.title, videoUrl: lesson.videoUrl || '', order: Number(lesson.order) || 0 },
+          });
+        } catch (e) {
+          // Non-fatal — lessons can be added later from the Course Player admin.
+        }
+      }
+    }
+    return { ok: true, id: nextId, offline: false };
+  } catch (err) {
+    return { ok: false, offline: false, error: (err && err.message) || 'Failed to save course on the server' };
+  }
+}
+
+/**
+ * Delete a course on the backend (when it maps to a real Firestore doc).
+ */
+async function deleteCourseFromApi(courseId) {
+  if (!adminApiAvailable()) return { ok: true, offline: true };
+  if (!/^[A-Za-z0-9]{8,}$/.test(String(courseId))) return { ok: true, offline: true };
+  try {
+    await window.API.apiFetch('/courses/' + courseId, { method: 'DELETE', auth: true });
+    return { ok: true, offline: false };
+  } catch (err) {
+    return { ok: false, offline: false, error: (err && err.message) || 'Failed to delete course on the server' };
+  }
+}
+
+/**
+ * Map a backend course doc into the frontend course shape.
+ */
+function apiCourseToFrontend(remote) {
+  const price = remote.discountedPrice != null ? remote.discountedPrice : (remote.price || 0);
+  return {
+    id: remote.id,
+    title: remote.title || '',
+    about: remote.shortDescription || remote.description || '',
+    shortDescription: remote.shortDescription || '',
+    description: remote.description || remote.shortDescription || '',
+    syllabus: remote.syllabus || '',
+    thumbnail: remote.thumbnail || 'assets/images/course_portrait.png',
+    category: remote.categoryName || remote.category || '',
+    categoryId: remote.categoryId || '',
+    level: remote.level ? remote.level.charAt(0) + remote.level.slice(1).toLowerCase() : 'Beginner',
+    pricing: price > 0 ? 'paid' : 'free',
+    originalPrice: remote.price || 0,
+    discountPrice: price,
+    duration: remote.duration || 'Flexible',
+    enrollments: remote.enrollmentCount || 0,
+    status: remote.status || 'DRAFT',
+    demoVideoUrl: remote.demoVideoUrl || '',
+    createdAt: remote.createdAt || null,
+    lessons: remote.lessons || [],
+  };
+}
+
+/**
+ * Map a backend review doc into the frontend review shape.
+ */
+function apiReviewToFrontend(r) {
+  const ts = r.createdAt;
+  const date = ts && ts.seconds ? new Date(ts.seconds * 1000) : (ts ? new Date(ts) : new Date());
+  return {
+    id: r.id,
+    studentName: r.studentName || 'Student',
+    courseId: r.courseId || null,
+    rating: r.rating || 5,
+    text: r.text || '',
+    date: date.toISOString().split('T')[0],
+  };
+}
+
+/**
+ * Load courses/categories/reviews from the backend into the local cache.
+ * Categories are stored as plain names for the existing UI; the id mapping
+ * is kept in _categoryIdMap for persistence.
+ */
+async function syncAdminFromApi() {
+  if (!adminApiAvailable()) return;
+
+  try {
+    // Admin endpoint lists ALL courses (published + drafts).
+    const courses = await window.API.apiFetch('/admin/courses', { auth: true });
+    if (Array.isArray(courses) && courses.length > 0) {
+      saveCourses(courses.map(apiCourseToFrontend));
+    }
+  } catch (e) {
+    // Offline — keep demo data.
+  }
+
+  try {
+    const categories = await window.API.apiFetch('/categories', { auth: false });
+    if (Array.isArray(categories) && categories.length > 0) {
+      _categoryIdMap = {};
+      categories.forEach((c) => {
+        if (c && c.name) _categoryIdMap[c.name] = c.id;
+      });
+      saveCategories(categories.map((c) => c.name));
+    }
+  } catch (e) {
+    // Offline
+  }
+
+  try {
+    // Admin sees approved + pending reviews.
+    const [approved, pending] = await Promise.all([
+      window.API.apiFetch('/reviews', { auth: false }).catch(() => []),
+      window.API.apiFetch('/reviews/pending', { auth: true }).catch(() => []),
+    ]);
+    const merged = []
+      .concat(Array.isArray(approved) ? approved : [])
+      .concat(Array.isArray(pending) ? pending : []);
+    if (merged.length > 0) {
+      saveReviews(merged.map(apiReviewToFrontend));
+    }
+  } catch (e) {
+    // Offline
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initAdminPanel();
 });
+
 
 function initAdminPanel() {
   initializeData();
@@ -20,9 +213,22 @@ function initAdminPanel() {
   setupImageUpload();
   showSection('dashboard');
   initThemeToggleAdmin();
+
+  // Hydrate real backend data when the admin token is available.
+  if (adminApiAvailable()) {
+    syncAdminFromApi().then(() => {
+      showSection(currentSection);
+      updateNavCounts();
+    });
+  }
 }
 
-/* ── Navigation ── */
+async function doAdminLogout() {
+  if (typeof logout === 'function') {
+    try { await logout(); } catch (e) { /* ignore */ }
+  }
+  window.location.href = 'login.html';
+}
 function setupAdminNavigation() {
   document.querySelectorAll('.admin-nav-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -115,10 +321,10 @@ function renderDashboard() {
     const recent = [...courses].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
     recentTable.innerHTML = recent.map(c => `
       <tr>
-        <td><img src="${c.thumbnail}" alt="" class="admin-table__thumb"></td>
-        <td><strong>${c.title}</strong></td>
-        <td>${c.category}</td>
-        <td>${c.level}</td>
+        <td><img src="${escapeHtml(c.thumbnail)}" alt="" class="admin-table__thumb"></td>
+        <td><strong>${escapeHtml(c.title)}</strong></td>
+        <td>${escapeHtml(c.category)}</td>
+        <td>${escapeHtml(c.level)}</td>
         <td>${c.pricing === 'free' ? '<span style="color:var(--color-success);font-weight:600;">Free</span>' : formatPrice(c.discountPrice)}</td>
         <td>${c.enrollments}</td>
       </tr>
@@ -135,24 +341,25 @@ function renderCoursesList() {
 
   tbody.innerHTML = courses.map(c => {
     const rating = calculateAverageRating(c.id);
+    const cId = jsString(c.id);
     return `
       <tr>
-        <td><img src="${c.thumbnail}" alt="" class="admin-table__thumb"></td>
+        <td><img src="${escapeHtml(c.thumbnail)}" alt="" class="admin-table__thumb"></td>
         <td>
-          <strong>${c.title}</strong>
+          <strong>${escapeHtml(c.title)}</strong>
           ${c.isBestSeller ? '<span style="color:var(--color-warning);font-size:11px;margin-left:4px;">⭐ Best Seller</span>' : ''}
         </td>
-        <td>${c.category}</td>
-        <td>${c.level}</td>
+        <td>${escapeHtml(c.category)}</td>
+        <td>${escapeHtml(c.level)}</td>
         <td>${c.pricing === 'free' ? '<span style="color:var(--color-success);font-weight:600;">Free</span>' : formatPrice(c.discountPrice)}</td>
         <td>${c.enrollments}</td>
         <td>${rating.average} (${rating.count})</td>
         <td>
           <div class="admin-table__actions">
-            <button class="btn btn--outline btn--sm" onclick="editCourse(${c.id})" title="Edit">
+            <button class="btn btn--outline btn--sm" onclick='editCourse("${cId}")' title="Edit">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button class="btn btn--danger btn--sm" onclick="confirmDeleteCourse(${c.id})" title="Delete">
+            <button class="btn btn--danger btn--sm" onclick='confirmDeleteCourse("${cId}")' title="Delete">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>
@@ -181,7 +388,7 @@ function populateCategoryDropdown() {
 
   const categories = getCategories();
   select.innerHTML = '<option value="">Select Category</option>' +
-    categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    categories.map(c => `<option value="${jsString(c)}">${escapeHtml(c)}</option>`).join('');
 }
 
 function showCourseForm(editId = null) {
@@ -227,7 +434,7 @@ function showCourseForm(editId = null) {
       // Thumbnail preview
       const preview = document.getElementById('thumbnailPreview');
       if (preview && course.thumbnail) {
-        preview.innerHTML = `<img src="${course.thumbnail}" alt="Preview">`;
+        preview.innerHTML = `<img src="${escapeHtml(course.thumbnail)}" alt="Preview">`;
         preview.style.display = 'block';
       }
     }
@@ -294,6 +501,21 @@ function saveCourseForm() {
     showToast('Course added successfully!', 'success');
   }
 
+  // Persist to the backend (best-effort; local cache always updated above).
+  if (adminApiAvailable()) {
+    persistCourseToApi(courseData, currentEditCourseId).then((res) => {
+      if (res && !res.offline && !res.ok) {
+        showToast('Server save failed: ' + (res.error || 'unknown error'), 'error');
+      } else if (res && res.offline === false) {
+        // refresh the list so doc ids from the server appear in the table
+        syncAdminFromApi().then(() => {
+          renderCoursesList();
+          renderDashboard();
+        });
+      }
+    });
+  }
+
   hideCourseForm();
   renderCoursesList();
   renderDashboard();
@@ -314,6 +536,16 @@ function confirmDeleteCourse(id) {
   document.getElementById('confirmDeleteBtn').onclick = () => {
     deleteCourse(id);
     showToast('Course deleted', 'success');
+
+    // Also remove it from the backend when it maps to a real doc.
+    if (adminApiAvailable()) {
+      deleteCourseFromApi(id).then((res) => {
+        if (res && !res.offline && !res.ok) {
+          showToast('Server delete failed: ' + (res.error || 'unknown error'), 'error');
+        }
+      });
+    }
+
     renderCoursesList();
     renderDashboard();
     closeModal('deleteModal');
@@ -403,10 +635,10 @@ function renderLessonsEditor(lessons) {
   container.innerHTML = tempLessons.map((lesson, i) => `
     <div class="lesson-item">
       <span class="lesson-item__number">${i + 1}</span>
-      <input type="text" class="form-input" value="${lesson.title}" 
+      <input type="text" class="form-input" value="${escapeHtml(lesson.title)}" 
         onchange="updateLessonTitle(${i}, this.value)" placeholder="Lesson title" 
         style="flex:1;padding:6px 10px;">
-      <input type="text" class="form-input" value="${lesson.videoUrl || ''}" 
+      <input type="text" class="form-input" value="${escapeHtml(lesson.videoUrl || '')}" 
         onchange="updateLessonVideo(${i}, this.value)" placeholder="Video URL" 
         style="flex:1;padding:6px 10px;">
       <div class="lesson-item__actions">
@@ -457,6 +689,14 @@ function setupCategoryForm() {
       input.value = '';
       renderCategories();
       populateCategoryDropdown();
+      // Persist to backend too.
+      if (adminApiAvailable()) {
+        window.API.apiFetch('/categories', { method: 'POST', auth: true, body: { name } })
+          .then((c) => {
+            if (c && c.id) _categoryIdMap[name] = c.id;
+          })
+          .catch((err) => showToast('Server category save failed', 'error'));
+      }
     } else {
       showToast('Category already exists', 'error');
     }
@@ -470,8 +710,8 @@ function renderCategories() {
   const categories = getCategories();
   container.innerHTML = categories.map(cat => `
     <span class="category-tag">
-      ${cat}
-      <button type="button" class="category-tag__remove" onclick="removeCategory('${cat}')" title="Remove">
+      ${escapeHtml(cat)}
+      <button type="button" class="category-tag__remove" onclick="removeCategory('${jsString(cat)}')" title="Remove">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </span>
@@ -483,6 +723,25 @@ function removeCategory(name) {
   showToast(`Category "${name}" removed`, 'info');
   renderCategories();
   populateCategoryDropdown();
+  // Persist to backend too.
+  if (adminApiAvailable()) {
+    const catId = _categoryIdMap[name];
+    if (catId) {
+      window.API.apiFetch('/categories/' + catId, { method: 'DELETE', auth: true })
+        .then(() => { delete _categoryIdMap[name]; })
+        .catch((err) => showToast('Server category delete failed', 'error'));
+    } else {
+      // No server id known — try admin list endpoint to resolve it
+      window.API.apiFetch('/categories', { auth: false })
+        .then((cats) => {
+          const match = (cats || []).find((c) => c && c.name === name);
+          if (match) {
+            return window.API.apiFetch('/categories/' + match.id, { method: 'DELETE', auth: true });
+          }
+        })
+        .catch(() => {});
+    }
+  }
 }
 
 /* ── Reviews Management ── */
@@ -494,27 +753,47 @@ function renderAdminReviews() {
   const courses = getCourses();
 
   tbody.innerHTML = reviews.map(r => {
-    const course = courses.find(c => c.id === r.courseId);
+    const course = courses.find(c => String(c.id) === String(r.courseId));
+    const cId = jsString(r.id);
     return `
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="width:32px;height:32px;border-radius:50%;background:var(--gradient-button);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;flex-shrink:0;">${getInitials(r.studentName)}</div>
-            <strong>${r.studentName}</strong>
+            <strong>${escapeHtml(r.studentName)}</strong>
           </div>
         </td>
-        <td>${course ? course.title : '—'}</td>
+        <td>${course ? escapeHtml(course.title) : '—'}</td>
         <td>${generateStarHTML(r.rating, 14)}</td>
-        <td style="max-width:300px;"><span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${r.text}</span></td>
-        <td>${r.date}</td>
+        <td style="max-width:300px;"><span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(r.text)}</span></td>
+        <td>${escapeHtml(r.date)}</td>
         <td>
-          <button class="btn btn--danger btn--sm" onclick="confirmDeleteReview(${r.id})" title="Delete">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
+          <div class="admin-table__actions">
+            <button class="btn btn--outline btn--sm" onclick='approveReview("${cId}")' title="Approve">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button class="btn btn--danger btn--sm" onclick='confirmDeleteReview("${cId}")' title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+function approveReview(id) {
+  // Approve on the backend (real docs only), then update local cache.
+  if (adminApiAvailable() && /^[A-Za-z0-9]{8,}$/.test(String(id))) {
+    window.API.apiFetch('/reviews/' + id + '/approve', { method: 'PATCH', auth: true })
+      .then(() => {
+        showToast('Review approved', 'success');
+      })
+      .catch((err) => showToast((err && err.message) || 'Failed to approve review', 'error'));
+  } else {
+    showToast('Review already approved locally', 'info');
+  }
+  renderAdminReviews();
 }
 
 function confirmDeleteReview(id) {
@@ -525,6 +804,10 @@ function confirmDeleteReview(id) {
   document.getElementById('confirmDeleteBtn').onclick = () => {
     deleteReview(id);
     showToast('Review deleted', 'success');
+    // Delete from backend too (real doc ids only).
+    if (adminApiAvailable() && /^[A-Za-z0-9]{8,}$/.test(String(id))) {
+      window.API.apiFetch('/reviews/' + id, { method: 'DELETE', auth: true }).catch(() => {});
+    }
     renderAdminReviews();
     closeModal('deleteModal');
   };

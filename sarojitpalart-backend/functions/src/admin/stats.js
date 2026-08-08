@@ -1,5 +1,5 @@
 const express = require('express');
-const { admin, db } = require('../config');
+const { admin, db, fieldValue } = require('../config');
 const { verifyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -71,7 +71,7 @@ router.get('/', verifyAdmin, async (req, res, next) => {
     // Update cache
     await cacheRef.set({
       stats,
-      cachedAt: admin.firestore.FieldValue.serverTimestamp(),
+      cachedAt: fieldValue.serverTimestamp(),
     });
 
     res.json(stats);

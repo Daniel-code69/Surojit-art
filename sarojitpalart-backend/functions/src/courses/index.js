@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, db, auth } = require('../config');
+const { admin, db, auth, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin, verifyStudent } = require('../middleware/auth');
 
@@ -120,8 +120,8 @@ router.post('/', verifyAdmin, validate(courseSchema), async (req, res, next) => 
       slug,
       discountedPrice: req.body.discountedPrice || null,
       enrollmentCount: 0,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: fieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     };
 
     const ref = await db.collection('courses').add(data);
@@ -134,7 +134,7 @@ router.post('/', verifyAdmin, validate(courseSchema), async (req, res, next) => 
 // PUT /courses/:courseId - Admin: update course
 router.put('/:courseId', verifyAdmin, validate(courseSchema.partial()), async (req, res, next) => {
   try {
-    const updates = { ...req.body, updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+    const updates = { ...req.body, updatedAt: fieldValue.serverTimestamp() };
     if (updates.title && !updates.slug) {
       updates.slug = generateSlug(updates.title);
     }
@@ -185,7 +185,7 @@ router.delete('/:courseId', verifyAdmin, async (req, res, next) => {
   try {
     await db.collection('courses').doc(req.params.courseId).update({
       status: 'DRAFT',
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     });
     res.json({ message: 'Course moved to draft' });
   } catch (err) {

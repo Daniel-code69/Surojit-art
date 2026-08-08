@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, db } = require('../config');
+const { admin, db, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyStudent } = require('../middleware/auth');
 const { sendWelcomeEmail } = require('../email/service');
@@ -23,8 +23,8 @@ router.post('/profile/create', validate(z.object({
       telegramUserId: null,
       telegramUsername: null,
       enrolledCourseIds: [],
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: fieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     };
 
     const ref = db.collection('students').doc(uid);
@@ -65,7 +65,7 @@ router.patch('/profile', verifyStudent, validate(z.object({
   try {
     const updates = {};
     if (req.body.name) updates.name = req.body.name;
-    updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+    updates.updatedAt = fieldValue.serverTimestamp();
 
     await db.collection('students').doc(req.user.uid).update(updates);
     res.json({ message: 'Profile updated' });
@@ -86,7 +86,7 @@ router.post('/connect-telegram', verifyStudent, validate(z.object({
     await db.collection('students').doc(uid).update({
       telegramUserId,
       telegramUsername: telegramUsername || null,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     });
 
     res.json({ message: 'Telegram account connected' });
@@ -109,8 +109,8 @@ async function onStudentCreate(userRecord) {
     telegramUserId: null,
     telegramUsername: null,
     enrolledCourseIds: [],
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: fieldValue.serverTimestamp(),
+    updatedAt: fieldValue.serverTimestamp(),
   };
 
   await db.collection('students').doc(uid).set(studentData);

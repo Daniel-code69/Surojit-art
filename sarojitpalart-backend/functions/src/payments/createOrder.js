@@ -3,7 +3,7 @@ const { z } = require('zod');
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const rateLimit = require('express-rate-limit');
-const { admin, db, config } = require('../config');
+const { admin, db, config, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyStudent } = require('../middleware/auth');
 
@@ -16,6 +16,9 @@ const paymentLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many payment requests, please try again later' },
+  keyGenerator: (req) =>
+    req.ip || (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || 'unknown',
+  validate: { ip: false, xForwardedForHeader: false },
 });
 
 function getRazorpay() {
@@ -82,16 +85,16 @@ async function createOrderHandler(req, res) {
       courseId,
       courseTitle: course.title,
       studentEmail: student.email,
-      enrolledAt: admin.firestore.FieldValue.serverTimestamp(),
+      enrolledAt: fieldValue.serverTimestamp(),
     });
 
     batch.update(db.collection('students').doc(uid), {
-      enrolledCourseIds: admin.firestore.FieldValue.arrayUnion(courseId),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      enrolledCourseIds: fieldValue.arrayUnion(courseId),
+      updatedAt: fieldValue.serverTimestamp(),
     });
 
     batch.update(db.collection('courses').doc(courseId), {
-      enrollmentCount: admin.firestore.FieldValue.increment(1),
+      enrollmentCount: fieldValue.increment(1),
     });
 
     await batch.commit();
@@ -131,8 +134,8 @@ async function createOrderHandler(req, res) {
     razorpayPaymentId: null,
     razorpaySignature: null,
     status: 'CREATED',
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: fieldValue.serverTimestamp(),
+    updatedAt: fieldValue.serverTimestamp(),
   };
 
   await db.collection('orders').add(orderData);

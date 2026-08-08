@@ -1,7 +1,7 @@
 const express = require('express');
 const { z } = require('zod');
 const crypto = require('crypto');
-const { admin, db, config } = require('../config');
+const { admin, db, config, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyStudent } = require('../middleware/auth');
 // Telegram video-delivery disabled — video access is handled via Firestore rules + API gating
@@ -85,7 +85,7 @@ router.post('/', verifyStudent, validate(z.object({
       status: 'PAID',
       razorpayPaymentId,
       razorpaySignature,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     });
 
     // Create enrollment
@@ -94,18 +94,18 @@ router.post('/', verifyStudent, validate(z.object({
       courseId,
       courseTitle: orderData.courseTitle,
       studentEmail: req.user.email || orderData.studentId,
-      enrolledAt: admin.firestore.FieldValue.serverTimestamp(),
+      enrolledAt: fieldValue.serverTimestamp(),
     });
 
     // Update student enrolledCourseIds
     batch.update(db.collection('students').doc(uid), {
-      enrolledCourseIds: admin.firestore.FieldValue.arrayUnion(courseId),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      enrolledCourseIds: fieldValue.arrayUnion(courseId),
+      updatedAt: fieldValue.serverTimestamp(),
     });
 
     // Increment course enrollment count
     batch.update(courseRef, {
-      enrollmentCount: admin.firestore.FieldValue.increment(1),
+      enrollmentCount: fieldValue.increment(1),
     });
 
     await batch.commit();

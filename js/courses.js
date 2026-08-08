@@ -11,12 +11,71 @@ let currentFilters = {
 };
 
 function initCourses() {
+  syncCoursesFromApi();
   renderCourses();
   setupFilterListeners();
   setupSearchListener();
   setupStickyFilters();
   initWishlist();
   initLazyLoading();
+}
+
+/**
+ * Map a backend course doc (Firebase/Cloud Functions) into the frontend course shape.
+ */
+function mapRemoteCourse(remote) {
+  if (!remote) return null;
+  const price = remote.discountedPrice != null ? remote.discountedPrice : (remote.price || 0);
+  return {
+    id: remote.id,
+    title: remote.title || '',
+    about: remote.about || remote.shortDescription || remote.description || '',
+    shortDescription: remote.shortDescription || remote.description || '',
+    description: remote.description || remote.shortDescription || '',
+    syllabus: remote.syllabus || '',
+    thumbnail: remote.thumbnail || 'assets/images/course_portrait.png',
+    category: remote.categoryName || remote.category || 'Art',
+    level: remote.level ? remote.level.charAt(0) + remote.level.slice(1).toLowerCase() : 'Beginner',
+    pricing: price > 0 ? 'paid' : 'free',
+    originalPrice: remote.price || 0,
+    discountPrice: price,
+    duration: remote.duration || 'Flexible',
+    enrollments: remote.enrollmentCount || 0,
+    createdAt: remote.createdAt || new Date().toISOString(),
+    demoVideoUrl: remote.demoVideoUrl || '',
+    lessons: [],
+  };
+}
+
+/**
+ * Load courses from the backend API and cache them locally. Falls back to the
+ * bundled demo data if the API is unreachable (e.g. local development).
+ */
+async function syncCoursesFromApi() {
+  if (typeof apiFetch !== 'function') return;
+  try {
+    const remoteCourses = await apiFetch('/courses', { auth: false });
+    if (Array.isArray(remoteCourses) && remoteCourses.length > 0) {
+      const mapped = remoteCourses.map(mapRemoteCourse).filter(Boolean);
+      saveCourses(mapped);
+      if (typeof initializeData === 'function') initializeData();
+      renderCourses();
+      return true;
+    }
+  } catch (e) {
+    // Backend not reachable — keep bundled demo courses locally.
+  }
+  // Ensure demo categories/reviews exist for offline/dev preview
+  initializeDemoContent();
+  return false;
+}
+
+function initializeDemoContent() {
+  if (typeof initializeData !== 'function') return;
+  const c = getCourses();
+  if (c.length === 0) initializeData();
+  const cats = getCategories();
+  if (cats.length === 0) initializeData();
 }
 
 /**
@@ -123,6 +182,13 @@ function renderCourses() {
     const isWishlisted = wishlist.includes(course.id);
     const rating = course.avgRating || 4.5;
     const reviewCount = course.reviewCount || 0;
+    const cId = jsString(course.id);
+    const cTitle = escapeHtml(course.title);
+    const cCat = escapeHtml(course.category);
+    const cDesc = escapeHtml(course.description);
+    const cThumb = escapeHtml(course.thumbnail);
+    const cDur = escapeHtml(course.duration);
+    const cLevel = escapeHtml(course.level);
 
     // Badge
     let badgeHTML = '';
@@ -154,28 +220,28 @@ function renderCourses() {
       if (typeof isEnrolled === 'function' && isEnrolled(course.id)) {
         enrollBtnHTML = `<button class="course-card__enroll" style="background:var(--bg-card);color:var(--primary-blue);border:1px solid var(--primary-blue);" onclick="window.location.href='student-dashboard.html'">Go to Course</button>`;
       } else {
-        enrollBtnHTML = `<button class="course-card__enroll" onclick="handleEnroll('${course.id}')">Enroll Now</button>`;
+        enrollBtnHTML = `<button class="course-card__enroll" onclick="handleEnroll('${cId}')">Enroll Now</button>`;
       }
     } else {
       enrollBtnHTML = `<a href="student-login.html" class="course-card__enroll" style="text-decoration:none;text-align:center;">Enroll Now</a>`;
     }
 
     return `
-      <article class="course-card" style="animation-delay: ${Math.min(index * 0.06, 0.5)}s" id="course-${course.id}" onclick="openCourseModal('${course.id}', event)">
+      <article class="course-card" style="animation-delay: ${Math.min(index * 0.06, 0.5)}s" id="course-${cId}" onclick="openCourseModal('${cId}', event)">
         <div class="course-card__image-wrapper">
           <div class="skeleton-img"></div>
-          <img data-src="${course.thumbnail}" alt="${course.title}" class="course-card__image" loading="lazy">
+          <img data-src="${cThumb}" alt="${cTitle}" class="course-card__image" loading="lazy">
           ${badgeHTML}
-          <button class="course-card__wishlist ${isWishlisted ? 'active' : ''}" data-course-id="${course.id}" aria-label="Add to wishlist">
+          <button class="course-card__wishlist ${isWishlisted ? 'active' : ''}" data-course-id="${cId}" aria-label="Add to wishlist">
             <svg viewBox="0 0 24 24" fill="${isWishlisted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
           </button>
         </div>
         <div class="course-card__body">
-          <span class="course-card__category" data-category="${course.category}">${course.category.toUpperCase()}</span>
-          <h3 class="course-card__title">${course.title}</h3>
-          <p class="course-card__desc">${course.description}</p>
+          <span class="course-card__category" data-category="${cCat}">${cCat.toUpperCase()}</span>
+          <h3 class="course-card__title">${cTitle}</h3>
+          <p class="course-card__desc">${cDesc}</p>
           <div class="course-card__rating">
             <span class="course-card__rating-value">${rating}</span>
             <div class="course-card__stars">${generateStarHTML(rating)}</div>
@@ -184,9 +250,9 @@ function renderCourses() {
           <div class="course-card__meta">
             <span class="course-card__duration">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              ${course.duration}
+              ${cDur}
             </span>
-            <span class="course-card__level-badge">${course.level}</span>
+            <span class="course-card__level-badge">${cLevel}</span>
           </div>
           <div class="course-card__footer">
             ${priceHTML}
@@ -215,7 +281,7 @@ function setupFilterListeners() {
   if (categoryFilter) {
     const categories = getCategories();
     categoryFilter.innerHTML = '<option value="">All Categories</option>' +
-      categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   }
 
   if (categoryFilter) {
@@ -330,17 +396,23 @@ function updateThemeIcon(theme) {
 document.addEventListener('DOMContentLoaded', () => {
   initCourses();
   initThemeToggle();
+  // Refresh enrollments from backend when a student is signed in so the
+  // "enroll" vs "go to course" state is accurate.
+  if (typeof isStudentAuthenticated === 'function' && isStudentAuthenticated() &&
+      typeof syncEnrollmentsFromApi === 'function') {
+    syncEnrollmentsFromApi().then(() => renderCourses());
+  }
 });
 
 // Global enroll handler
-window.handleEnroll = function(courseId) {
+window.handleEnroll = async function(courseId) {
   if (typeof isStudentAuthenticated === 'function' && !isStudentAuthenticated()) {
     window.location.href = 'student-login.html';
     return;
   }
 
-  if (typeof enrollInCourse === 'function') {
-    const result = enrollInCourse(courseId);
+  if (typeof checkoutCourse === 'function') {
+    const result = await checkoutCourse(courseId);
     if (result.success) {
       if (typeof showToast === 'function') {
         showToast(result.message, 'success');
@@ -355,6 +427,19 @@ window.handleEnroll = function(courseId) {
       } else {
         alert(result.message);
       }
+    }
+    return;
+  }
+
+  if (typeof enrollInCourse === 'function') {
+    const result = await enrollInCourse(courseId);
+    if (result.success) {
+      if (typeof showToast === 'function') showToast(result.message, 'success');
+      else alert(result.message);
+      renderCourses();
+    } else {
+      if (typeof showToast === 'function') showToast(result.message, 'error');
+      else alert(result.message);
     }
   }
 };
@@ -421,7 +506,7 @@ window.openCourseModal = async function(courseId, event) {
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
     '</button>' +
     '<div style="height:220px; overflow:hidden; position:relative; flex-shrink:0;">' +
-      '<img src="' + (course.thumbnail || '') + '" style="width:100%; height:100%; object-fit:cover;" alt="' + escapeHtml(course.title) + '">' +
+      '<img src="' + escapeHtml(course.thumbnail || '') + '" style="width:100%; height:100%; object-fit:cover;" alt="' + escapeHtml(course.title) + '">' +
       '<div style="position:absolute; inset:0; background:linear-gradient(to top, var(--bg-card), transparent);"></div>' +
     '</div>' +
     '<div style="padding:var(--space-6); margin-top:-60px; position:relative; z-index:2;">' +
@@ -429,7 +514,7 @@ window.openCourseModal = async function(courseId, event) {
       '<h2 style="font-size:1.8rem; font-weight:800; margin-top:0.5rem; margin-bottom:0.5rem; color:var(--text-primary); line-height:1.2;">' + escapeHtml(course.title) + '</h2>' +
       '<p style="color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-4);">' + escapeHtml(course.about || course.description) + '</p>' +
       '<div style="display:flex; gap:1.2rem; margin-bottom:var(--space-5); font-size:0.9rem; color:var(--text-secondary); flex-wrap:wrap;">' +
-        '<span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + (course.duration || 'Flexible') + '</span>' +
+        '<span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + escapeHtml(course.duration || 'Flexible') + '</span>' +
         '<span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ' + (course.avgRating || 4.5) + '</span>' +
         '<span style="display:flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> ' + (course.enrollments || 0) + ' Students</span>' +
       '</div>' +
@@ -450,18 +535,13 @@ window.openCourseModal = async function(courseId, event) {
         '<div style="font-size:1.5rem; font-weight:800; color:var(--text-primary);">' +
           (course.pricing === 'free' ? '<span style="color:var(--color-free);">Free</span>' : formatPrice(course.discountPrice)) +
         '</div>' +
-        '<button class="btn btn--primary" style="flex:1; padding:12px; font-size:1rem;" onclick="handleEnroll(\'' + course.id + '\'); closeCourseModal();">Enroll Now</button>' +
+        '<button class="btn btn--primary" style="flex:1; padding:12px; font-size:1rem;" onclick="handleEnroll(\'' + escapeHtml(course.id) + '\'); closeCourseModal();">Enroll Now</button>' +
       '</div>' +
     '</div>';
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 };
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 window.closeCourseModal = function() {
   const modal = document.getElementById('courseDetailsModal');

@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { admin, auth, db, config } = require('../config');
+const { admin, auth, db, config, fieldValue } = require('../config');
 const { validate } = require('../middleware/validate');
 const { verifyAdmin } = require('../middleware/auth');
 
@@ -41,7 +41,7 @@ router.post('/setup', validate(z.object({
     await db.collection('admins').doc(userRecord.uid).set({
       email,
       name,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: fieldValue.serverTimestamp(),
     });
 
     res.status(201).json({

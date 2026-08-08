@@ -6,7 +6,7 @@
  * Calculate average rating from reviews for a specific course
  */
 function calculateAverageRating(courseId) {
-  const reviews = getReviews().filter(r => r.courseId === parseInt(courseId));
+  const reviews = getReviews().filter(r => String(r.courseId) === String(courseId));
   if (reviews.length === 0) return { average: 0, count: 0 };
   const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
   return {
@@ -81,7 +81,32 @@ function debounce(fn, delay = 300) {
  * Get initials from name
  */
 function getInitials(name) {
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  name = String(name || '');
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0 || !parts[0]) return 'S';
+  return parts.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+}
+
+/**
+ * Escape a value for safe insertion into HTML.
+ */
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Encode a value for safe use inside a JS string literal in HTML attributes.
+ */
+function jsString(value) {
+  return escapeHtml(String(value ?? ''))
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$/g, '\\$');
 }
 
 /**
