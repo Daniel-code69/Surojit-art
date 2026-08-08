@@ -1,0 +1,63 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "safety",
+      "**/node_modules/**",
+      "sarojitpalart-backend/**",
+      "**/.*",
+      "*dist*",
+      "*.md"
+    ],
+    "rewrites": [
+      { "source": "/api/v1/**", "function": "api" },
+      { "source": "**", "dest": "/index.html" }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [{ "key": "Cache-Control", "value": "max-age=31536000" }]
+      }
+    ]
+  },
+  "functions": {
+    "source": "sarojitpalart-backend/functions",
+    "runtime": "nodejs20"
+  },
+  "firestore": {
+    "rules": "sarojitpalart-backend/firestore.rules",
+    "indexes": "sarojitpalart-backend/firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "sarojitpalart-backend/storage.rules",
+    "bucket": "sarojitpalart.appspot.com"
+  },
+  "emulators": {
+    "auth": {
+      "host": "127.0.0.1",
+      "port": 9099
+    },
+    "functions": {
+      "host": "127.0.0.1",
+      "port": 5001
+    },
+    "firestore": {
+      "host": "127.0.0.1",
+      "port": 8080
+    },
+    "storage": {
+      "host": "127.0.0.1",
+      "port": 9199
+    },
+    "hosting": {
+      "host": "127.0.0.1",
+      "port": 5000
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
+  }
+}
